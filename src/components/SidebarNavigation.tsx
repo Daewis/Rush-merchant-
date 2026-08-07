@@ -46,6 +46,29 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
 
         <nav className="space-y-1 mt-1">
           <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              activeTab === "dashboard"
+                ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>
+                {user?.role === "artisan"
+                  ? "Artisan Dashboard"
+                  : user?.role === "admin"
+                  ? "Admin Console"
+                  : "Customer Dashboard"}
+              </span>
+            </div>
+            <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold uppercase">
+              {user?.role || "user"}
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("jobs")}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               activeTab === "jobs"
