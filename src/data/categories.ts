@@ -1,0 +1,68 @@
+import { CategoryItem } from "../types";
+
+export const categories: CategoryItem[] = [
+  {
+    id: "plumbing",
+    name: "Plumbing & Leak Repairs",
+    icon: "Wrench",
+    count: 142,
+    avgCost: "₦8,500",
+    popularServices: ["Hostel Pipe Replacement", "Sink & Toilet Unclogging", "Overhead Tank Installation"],
+  },
+  {
+    id: "electrical",
+    name: "Electrical & Solar Power",
+    icon: "Zap",
+    count: 218,
+    avgCost: "₦12,000",
+    popularServices: ["Inverter & Battery Wiring", "Dorm Circuit Breaker Repair", "Prepaid Meter Installation"],
+  },
+  {
+    id: "ac_repair",
+    name: "AC Servicing & Gas Refill",
+    icon: "Wind",
+    count: 95,
+    avgCost: "₦18,000",
+    popularServices: ["Split Unit Deep Clean", "Gas Leak Test & Top-up", "Compressor Capacitor Change"],
+  },
+  {
+    id: "carpentry",
+    name: "Carpentry & Door Locksmith",
+    icon: "Hammer",
+    count: 88,
+    avgCost: "₦7,500",
+    popularServices: ["Room Security Lock Change", "Bed Frame Maintenance", "Reading Desk Fabrication"],
+  },
+  {
+    id: "painting",
+    name: "Painting & Wall Finishing",
+    icon: "Paintbrush",
+    count: 64,
+    avgCost: "₦25,000",
+    popularServices: ["Hostel Room Repaint", "Damp & Mould Treatment", "POP Screeding"],
+  },
+  {
+    id: "generators",
+    name: "Generator Repair",
+    icon: "Cog",
+    count: 110,
+    avgCost: "₦9,000",
+    popularServices: ["Ipasso / Tiger Carburetor Clean", "4.5kVA AVR Change", "Oil Change & Plug Replacement"],
+  },
+  {
+    id: "tiling",
+    name: "Tiling & Masonry",
+    icon: "Grid",
+    count: 45,
+    avgCost: "₦35,000",
+    popularServices: ["Bathroom Floor Retiling", "Kitchen Countertop Slab", "Wall Crack Repair"],
+  },
+  {
+    id: "appliances",
+    name: "Appliance & TV Repair",
+    icon: "Tv",
+    count: 130,
+    avgCost: "₦11,000",
+    popularServices: ["Micro-wave Magnetron Fix", "Refrigerator Thermostat", "LED TV Backlight Repair"],
+  },
+];

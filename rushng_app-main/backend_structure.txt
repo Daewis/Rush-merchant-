@@ -1,0 +1,134 @@
+
+
+rushng-backend/
+│
+├── 📁 app/
+│   ├── 📁 api/
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 auth.py
+│   │   ├── 📄 users.py
+│   │   ├── 📄 providers.py
+│   │   ├── 📄 jobs.py
+│   │   ├── 📄 payments.py
+│   │   ├── 📄 violations.py
+│   │   ├── 📄 ratings.py
+│   │   ├── 📄 notifications.py
+│   │   └── 📄 admin.py
+│   │
+│   ├── 📁 core/
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 config.py
+│   │   ├── 📄 database.py
+│   │   ├── 📄 security.py
+│   │   ├── 📄 dependencies.py
+│   │   └── 📄 logging.py
+│   │
+│   ├── 📁 models/
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 user.py
+│   │   ├── 📄 provider.py
+│   │   ├── 📄 job.py
+│   │   ├── 📄 payment.py
+│   │   ├── 📄 violation.py
+│   │   ├── 📄 advertising_plan.py
+│   │   ├── 📄 merchant_analytics.py
+│   │   ├── 📄 refresh_token.py
+│   │   ├── 📄 rating.py
+│   │   ├── 📄 notification.py
+│   │   └── 📄 audit_log.py
+│   │
+│   ├── 📁 schemas/
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 auth.py
+│   │   ├── 📄 user.py
+│   │   ├── 📄 provider.py
+│   │   ├── 📄 job.py
+│   │   ├── 📄 payment.py
+│   │   ├── 📄 violation.py
+│   │   └── 📄 rating.py
+│   │
+│   ├── 📁 services/
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 payment_service.py
+│   │   ├── 📄 notification_service.py
+│   │   ├── 📄 verification_service.py
+│   │   ├── 📄 geo_service.py
+│   │   └── 📄 audit_service.py
+│   │
+│   ├── 📁 utils/
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 validators.py
+│   │   ├── 📄 helpers.py
+│   │   ├── 📄 geo.py
+│   │   └── 📄 constants.py
+│   │
+│   ├── 📄 __init__.py
+│   ├── 📄 extensions.py
+│   └── 📄 wsgi.py
+│
+├── 📁 db/
+│   ├── 📄 init.sql
+│   └── 📄 seed.sql
+│
+├── 📁 logs/                              ⭐ MISSING - Create this
+│   ├── 📄 app.log
+│   ├── 📄 error.log
+│   ├── 📄 access.log
+│   └── 📄 security.log
+│
+├── 📁 tests/ 
+│   ├── 📄 __init__.py
+│   ├── 📁 unit/
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 test_models.py
+│   │   ├── 📄 test_services.py
+│   │   ├── 📄 test_utils.py
+│   │   └── 📄 test_validators.py
+│   ├── 📁 integration/
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 test_auth.py
+│   │   ├── 📄 test_jobs.py
+│   │   ├── 📄 test_payments.py
+│   │   ├── 📄 test_providers.py
+│   │   ├── 📄 test_violations.py
+│   │   └── 📄 test_ratings.py
+│   ├── 📁 fixtures/
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 test_data.py
+│   │   └── 📄 sample_data.json
+│   └── 📄 conftest.py
+│
+├── 📁 scripts/
+│   ├── 📄 init-db.sh
+│   ├── 📄 backup.sh
+│   ├── 📄 restore.sh
+│   ├── 📄 deploy.sh
+│   ├── 📄 manage_db.py
+│   └── 📄 seed.py
+│
+├── 📁 static/                             ⭐ MISSING - For static files
+│   └── 📄 .gitkeep
+│
+├── 📁 uploads/                            ⭐ MISSING - For user uploads
+│   └── 📄 .gitkeep
+│
+├── 📁 .github/ 
+│   └── 📁 workflows/
+│       ├── 📄 ci.yml
+│       └── 📄 deploy.yml
+│
+├── 📄 .env
+├── 📄 .env.example
+├── 📄 .gitignore
+├── 📄 Dockerfile
+├── 📄 docker-compose.yml
+├── 📄 gunicorn.conf.py
+├── 📄 Makefile
+├── 📄 nginx.conf
+├── 📄 requirements.txt
+├── 📄 requirements-dev.txt
+├── 📄 run.py
+├── 📄 supervisor.conf
+├── 📄 pytest.ini 
+├── 📄 tox.ini 
+└── 📄 README.md 
