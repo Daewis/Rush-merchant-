@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Home,
   Briefcase,
   Users,
   Wallet,
@@ -45,6 +46,23 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
         </p>
 
         <nav className="space-y-1 mt-1">
+          <button
+            onClick={() => setActiveTab("home")}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              activeTab === "home"
+                ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <Home className="w-4 h-4 text-orange-600" />
+              <span>Landing Page</span>
+            </div>
+            <span className="text-[10px] bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-bold uppercase">
+              Home
+            </span>
+          </button>
+
           <button
             onClick={() => setActiveTab("dashboard")}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${

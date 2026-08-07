@@ -132,3 +132,5 @@ export interface CategoryItem {
   avgCost: string;
   popularServices: string[];
 }
+
+export * from './types/index';

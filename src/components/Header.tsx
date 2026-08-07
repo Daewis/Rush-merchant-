@@ -3,13 +3,16 @@ import {
   ShieldCheck,
   Wallet,
   Building,
-  User,
   PlusCircle,
-  Bell,
   Search,
+  LogIn,
+  UserPlus,
+  Home as HomeIcon,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useMarketplace } from "../context/MarketplaceContext";
+import { useAppStore } from "../store/app-store";
 
 interface HeaderProps {
   onOpenPostJob: () => void;
@@ -36,6 +39,14 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { user, loginAs } = useAuth();
   const { selectedHub, setSelectedHub, searchQuery, setSearchQuery } = useMarketplace();
+  const { setView } = useAppStore();
+
+  const handleNavigate = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === "home") setView("home");
+    else if (tab === "login") setView("login");
+    else if (tab === "register") setView("register");
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-xs">
@@ -53,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-slate-400 text-[11px]">Role Switcher:</span>
           <button
             onClick={() => loginAs("customer")}
-            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+            className={`px-2 py-0.5 rounded text-[11px] font-medium transition cursor-pointer ${
               user?.role === "customer"
                 ? "bg-orange-500 text-white font-semibold"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
@@ -63,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => loginAs("artisan")}
-            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+            className={`px-2 py-0.5 rounded text-[11px] font-medium transition cursor-pointer ${
               user?.role === "artisan"
                 ? "bg-orange-500 text-white font-semibold"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
@@ -73,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => loginAs("admin")}
-            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+            className={`px-2 py-0.5 rounded text-[11px] font-medium transition cursor-pointer ${
               user?.role === "admin"
                 ? "bg-purple-600 text-white font-semibold"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
@@ -88,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         {/* Logo */}
         <div
-          onClick={() => setActiveTab("jobs")}
+          onClick={() => handleNavigate("home")}
           className="flex items-center gap-2 cursor-pointer group shrink-0"
         >
           <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md group-hover:scale-105 transition transform">
@@ -110,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Hub Dropdown & Search Bar */}
-        <div className="hidden md:flex items-center gap-2 flex-1 max-w-xl">
+        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md">
           <div className="relative shrink-0">
             <Building className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <select
@@ -130,7 +141,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search artisans, plumbing, electrical, generator..."
+              placeholder="Search artisans, plumbing, electrical..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-xs bg-slate-100 rounded-lg border border-slate-200 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:outline-none transition"
@@ -139,29 +150,59 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right CTA Controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Landing / Home Button */}
+          <button
+            onClick={() => handleNavigate("home")}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-xs transition cursor-pointer ${
+              activeTab === "home"
+                ? "bg-orange-100 text-orange-700 border border-orange-200"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <HomeIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Landing Page</span>
+          </button>
+
+          {/* Login Button */}
+          <button
+            onClick={() => handleNavigate("login")}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border font-semibold text-xs transition cursor-pointer ${
+              activeTab === "login"
+                ? "bg-slate-900 text-white border-slate-900"
+                : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            <LogIn className="w-4 h-4 text-orange-600" />
+            <span>Login</span>
+          </button>
+
+          {/* Sign Up / Register Button */}
+          <button
+            onClick={() => handleNavigate("register")}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-xs transition cursor-pointer shadow-xs ${
+              activeTab === "register"
+                ? "bg-amber-600 text-white"
+                : "bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white"
+            }`}
+          >
+            <UserPlus className="w-4 h-4" />
+            <span className="hidden sm:inline">Sign Up</span>
+          </button>
+
           {/* Post Job Button */}
           <button
             onClick={onOpenPostJob}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs shadow-xs transition active:scale-95 cursor-pointer"
+            className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-xs transition active:scale-95 cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Post Job to Escrow</span>
-          </button>
-
-          {/* Become Artisan Button */}
-          <button
-            onClick={onOpenOnboarding}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs border border-slate-200 transition"
-          >
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Join as Artisan</span>
+            <PlusCircle className="w-4 h-4 text-orange-400" />
+            <span>Post Job</span>
           </button>
 
           {/* Wallet Balance Widget */}
           <button
-            onClick={() => setActiveTab("wallet")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition ${
+            onClick={() => handleNavigate("wallet")}
+            className={`hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-lg border transition ${
               activeTab === "wallet"
                 ? "bg-slate-900 text-white border-slate-900"
                 : "bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100/70"
@@ -173,14 +214,18 @@ export const Header: React.FC<HeaderProps> = ({
                 Wallet
               </p>
               <p className="text-xs font-black">
-                ₦{user?.walletBalance.toLocaleString()}
+                ₦{user?.walletBalance ? user.walletBalance.toLocaleString() : "45,000"}
               </p>
             </div>
           </button>
 
           {/* User Profile Pill */}
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-            <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-300">
+            <div 
+              onClick={() => handleNavigate("dashboard")}
+              className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-300 cursor-pointer hover:ring-2 hover:ring-orange-500 transition"
+              title="Go to Dashboard"
+            >
               {user?.avatar ? (
                 <img
                   src={user.avatar}
@@ -189,17 +234,9 @@ export const Header: React.FC<HeaderProps> = ({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-500 font-bold text-xs">
-                  {user?.displayName.slice(0, 2).toUpperCase()}
+                  {user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : "US"}
                 </div>
               )}
-            </div>
-            <div className="hidden xl:block text-left">
-              <p className="text-xs font-bold text-slate-800 leading-tight">
-                {user?.displayName}
-              </p>
-              <p className="text-[10px] text-slate-500 capitalize font-medium">
-                {user?.role}
-              </p>
             </div>
           </div>
         </div>
@@ -207,3 +244,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

@@ -173,7 +173,7 @@ export function useProviders(options: UseProvidersOptions = {}) {
     try {
       const response = await providerApi.stats();
       if (response.data?.success) {
-        return response.data.data;
+        return response.data.data as Record<string, any>;
       }
       return null;
     } catch {

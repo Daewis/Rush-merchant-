@@ -11,7 +11,7 @@ interface LoadingStore {
 export const useLoadingStore = create<LoadingStore>((set) => ({
   isLoading: false,
   message: null,
-  setLoading: (isLoading, message = null) => set({ isLoading, message }),
-  startLoading: (message = null) => set({ isLoading: true, message }),
+  setLoading: (isLoading, message = undefined) => set({ isLoading, message: message ?? null }),
+  startLoading: (message = undefined) => set({ isLoading: true, message: message ?? null }),
   stopLoading: () => set({ isLoading: false, message: null }),
 }));

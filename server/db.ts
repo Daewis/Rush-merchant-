@@ -12,14 +12,14 @@ export async function connectDB() {
 
   if (uri) {
     try {
-      console.log('📡 Connecting to MongoDB Atlas / Remote database...');
+      console.log('📡 Connecting to database...');
       await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 3000,
       });
       console.log('✅ Connected to MongoDB successfully.');
       return;
     } catch (err) {
-      console.warn('⚠️ Remote MongoDB connection failed, falling back to local MongoDB Memory Server:', (err as Error).message);
+      console.log('ℹ️ Remote MongoDB connection unavailable, switching to local database instance.');
     }
   }
 

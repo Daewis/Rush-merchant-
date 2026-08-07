@@ -130,7 +130,7 @@ export function useViolations(options: UseViolationsOptions = {}) {
     try {
       const response = await violationApi.stats();
       if (response.data?.success) {
-        return response.data.data;
+        return response.data.data as Record<string, any>;
       }
       return null;
     } catch {

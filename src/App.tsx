@@ -17,11 +17,12 @@ import { AdminDashboard } from "./components/dashboard/AdminDashboard";
 import { LoginForm } from "./components/auth/LoginForm";
 import { RegisterForm } from "./components/auth/RegisterForm";
 import { VerifyForm } from "./components/auth/VerifyForm";
+import { LandingPage } from "./components/home/LandingPage";
 import { useAppStore } from "./store/app-store";
 import { GlobalLoadingOverlay } from "./components/common/GlobalLoadingOverlay";
 
 const MainAppContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [activeTab, setActiveTab] = useState<string>("home");
   const [isPostJobOpen, setIsPostJobOpen] = useState<boolean>(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
   const { user } = useAuth();
@@ -29,10 +30,16 @@ const MainAppContent: React.FC = () => {
 
   // Synchronize activeTab with Zustand store currentView if set externally
   useEffect(() => {
-    if (currentView === "login" || currentView === "register" || currentView === "verify") {
+    if (currentView === "home") {
+      setActiveTab("home");
+    } else if (currentView === "login" || currentView === "register" || currentView === "verify") {
       setActiveTab(currentView);
     } else if (currentView === "customer-dashboard" || currentView === "provider-dashboard" || currentView === "admin-dashboard") {
       setActiveTab("dashboard");
+    } else if (currentView === "jobs") {
+      setActiveTab("jobs");
+    } else if (currentView === "providers") {
+      setActiveTab("artisans");
     } else if (currentView === "job-post") {
       setIsPostJobOpen(true);
     } else if (currentView === "provider-register") {
@@ -42,12 +49,16 @@ const MainAppContent: React.FC = () => {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    if (tab === "dashboard") {
+    if (tab === "home") {
+      setView("home");
+    } else if (tab === "dashboard") {
       if (user?.role === "artisan") setView("provider-dashboard");
       else if (user?.role === "admin") setView("admin-dashboard");
       else setView("customer-dashboard");
     } else if (tab === "jobs") {
       setView("jobs");
+    } else if (tab === "login" || tab === "register" || tab === "verify") {
+      setView(tab as any);
     }
   };
 
@@ -71,50 +82,54 @@ const MainAppContent: React.FC = () => {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          {/* Left Sidebar (hidden on full auth screens) */}
-          {activeTab !== "login" && activeTab !== "register" && activeTab !== "verify" && (
-            <SidebarNavigation
-              activeTab={activeTab}
-              setActiveTab={handleTabChange}
-              onOpenPostJob={() => setIsPostJobOpen(true)}
-            />
-          )}
-
-          {/* Main Content Body */}
-          <div className="flex-1 w-full min-w-0">
-            {activeTab === "dashboard" && renderDashboard()}
-
-            {activeTab === "jobs" && (
-              <JobBoard onOpenPostJob={() => setIsPostJobOpen(true)} />
-            )}
-
-            {activeTab === "categories" && (
-              <CategoriesGrid
-                onSelectCategory={() => handleTabChange("jobs")}
-              />
-            )}
-
-            {activeTab === "artisans" && (
-              <ArtisanDirectory
+        {activeTab === "home" ? (
+          <LandingPage />
+        ) : (
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            {/* Left Sidebar (hidden on full auth screens) */}
+            {activeTab !== "login" && activeTab !== "register" && activeTab !== "verify" && (
+              <SidebarNavigation
+                activeTab={activeTab}
+                setActiveTab={handleTabChange}
                 onOpenPostJob={() => setIsPostJobOpen(true)}
-                onOpenOnboarding={() => setIsOnboardingOpen(true)}
               />
             )}
 
-            {activeTab === "track_hud" && <JobTrackerHUD />}
+            {/* Main Content Body */}
+            <div className="flex-1 w-full min-w-0">
+              {activeTab === "dashboard" && renderDashboard()}
 
-            {activeTab === "wallet" && <EscrowWallet />}
+              {activeTab === "jobs" && (
+                <JobBoard onOpenPostJob={() => setIsPostJobOpen(true)} />
+              )}
 
-            {activeTab === "disputes" && <AccountabilityCenter />}
+              {activeTab === "categories" && (
+                <CategoriesGrid
+                  onSelectCategory={() => handleTabChange("jobs")}
+                />
+              )}
 
-            {activeTab === "login" && <LoginForm />}
+              {activeTab === "artisans" && (
+                <ArtisanDirectory
+                  onOpenPostJob={() => setIsPostJobOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                />
+              )}
 
-            {activeTab === "register" && <RegisterForm />}
+              {activeTab === "track_hud" && <JobTrackerHUD />}
 
-            {activeTab === "verify" && <VerifyForm />}
+              {activeTab === "wallet" && <EscrowWallet />}
+
+              {activeTab === "disputes" && <AccountabilityCenter />}
+
+              {activeTab === "login" && <LoginForm />}
+
+              {activeTab === "register" && <RegisterForm />}
+
+              {activeTab === "verify" && <VerifyForm />}
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Modals */}

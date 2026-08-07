@@ -5,15 +5,22 @@
 export type UserRole = 'customer' | 'provider' | 'admin' | 'support';
 
 export interface User {
-  id: string;
+  id?: string;
+  uid?: string;
   email: string;
-  phone: string;
-  full_name: string;
-  role: UserRole;
-  is_verified: boolean;
-  is_active: boolean;
+  phone?: string;
+  full_name?: string;
+  displayName?: string;
+  role: string;
+  is_verified?: boolean;
+  is_active?: boolean;
   profile_picture?: string;
-  created_at: string;
+  avatar?: string;
+  walletBalance?: number;
+  escrowHeld?: number;
+  campusHub?: string;
+  created_at?: string;
+  createdAt?: string;
   updated_at?: string;
 }
 

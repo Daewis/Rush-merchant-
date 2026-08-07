@@ -15,6 +15,8 @@ export type ViewType =
   | 'job-post'
   | 'job-details'
   | 'job-tracking'
+  | 'new-job'
+  | 'my-jobs'
   | 'providers'
   | 'provider-register'
   | 'provider-profile'
@@ -23,6 +25,8 @@ export type ViewType =
   | 'notifications'
   | 'profile'
   | 'settings';
+
+export type AppView = ViewType;
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 

@@ -99,7 +99,8 @@ export function usePayments() {
       const response = await paymentApi.verify({ reference });
       if (response.data?.success) {
         toast.success('Payment verified successfully!');
-        return response.data.data.payment || response.data.data;
+        const payload = response.data.data as any;
+        return payload?.payment || payload;
       }
 
       const msg = response.data?.message || 'Payment verification failed';

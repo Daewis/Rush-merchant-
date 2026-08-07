@@ -126,7 +126,7 @@ export function ProviderDashboard() {
             <div className="relative">
               <Avatar className="h-14 w-14 border-2 border-white/30">
                 <AvatarFallback className="bg-white/20 text-white text-lg font-bold">
-                  {user?.full_name?.split(' ').map((n) => n[0]).join('') || 'TB'}
+                  {user?.full_name?.split(' ').map((n: string) => n[0]).join('') || 'TB'}
                 </AvatarFallback>
               </Avatar>
               <div
