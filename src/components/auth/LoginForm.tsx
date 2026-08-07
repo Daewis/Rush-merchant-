@@ -6,12 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Eye, EyeOff, AlertCircle, Mail, Lock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { useAppStore } from '@/store/app-store';
 
 export function LoginForm() {
   const { setView } = useAppStore();
-  const { login, loading } = useAuth();
+  const { login, googleLogin, loginLoading, googleLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -30,127 +30,220 @@ export function LoginForm() {
     }
 
     try {
-      const res = await login(formData.email, formData.password, formData.remember);
-      toast.success('Welcome back! 🎉');
-      
-      const targetView = res?.user?.role === 'provider' ? 'provider-dashboard' : res?.user?.role === 'admin' ? 'admin-dashboard' : 'customer-dashboard';
-      setView(targetView as any);
+      const res = await login(formData.email, formData.password);
+      if (!res.success) {
+        setError(res.error || 'Authentication failed. Please check credentials.');
+      }
     } catch (err: any) {
-      const message = err?.response?.data?.detail || err?.message || 'Invalid email or password. Please try again.';
-      setError(message);
-      toast.error('Authentication failed');
+      setError(err?.message || 'Authentication failed.');
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    await googleLogin();
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2.5 rounded-lg border border-destructive/20 bg-destructive/10 p-3.5 text-sm text-destructive"
-        >
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </motion.div>
-      )}
-
-      {/* Email Input */}
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm font-semibold">Email Address</Label>
-        <div className="relative group">
-          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-orange-500 transition-colors" />
-          <Input
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            required
-            disabled={loading}
-            className="h-12 pl-10 focus-visible:ring-orange-500"
-          />
-        </div>
+    <div className="max-w-md mx-auto p-6 bg-white rounded-2xl shadow-xl border border-slate-200">
+      <div className="text-center mb-6 space-y-1">
+        <h2 className="text-2xl font-bold text-slate-900">Welcome Back to RUSHNG</h2>
+        <p className="text-xs text-slate-500">Sign in to manage campus deliveries, escrows & jobs</p>
       </div>
 
-      {/* Password Input */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
-          <button
-            type="button"
-            onClick={() => toast.info('Please contact support to reset your password.')}
-            className="text-sm text-orange-600 hover:underline font-medium transition-colors"
-          >
-            Forgot password?
-          </button>
-        </div>
-        <div className="relative group">
-          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-orange-500 transition-colors" />
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            required
-            disabled={loading}
-            className="h-12 pl-10 pr-12 focus-visible:ring-orange-500"
-          />
-          <button
-            type="button"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Remember Me Checkbox */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="remember"
-          checked={formData.remember}
-          onCheckedChange={(checked) => setFormData({ ...formData, remember: Boolean(checked) })}
-          className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
-        />
-        <Label htmlFor="remember" className="text-sm font-normal cursor-pointer text-muted-foreground select-none">
-          Keep me logged in
-        </Label>
-      </div>
-
-      {/* Submit Button */}
-      <Button
-        type="submit"
-        className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all text-base"
-        disabled={loading}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Signing in...
-          </>
-        ) : (
-          <>
-            Sign In
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </>
-        )}
-      </Button>
-
-      {/* Sign Up Link */}
-      <p className="text-center text-sm text-muted-foreground">
-        Don't have an account?{' '}
-        <button
+      {/* Google Sign-In Option */}
+      <div className="space-y-4">
+        <Button
           type="button"
-          onClick={() => setView('register')}
-          className="text-orange-600 font-semibold hover:underline transition-colors"
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading || loginLoading}
+          variant="outline"
+          className="w-full h-11 border-slate-300 hover:bg-slate-50 font-semibold text-slate-700 flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-sm"
         >
-          Create one now
-        </button>
-      </p>
-    </form>
+          {googleLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
+          ) : (
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+              />
+            </svg>
+          )}
+          <span>Continue with Google</span>
+        </Button>
+
+        <div className="relative flex items-center justify-center my-4">
+          <div className="border-t border-slate-200 w-full" />
+          <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-slate-400 font-semibold absolute">
+            or sign in with email
+          </span>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700"
+          >
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </motion.div>
+        )}
+
+        {/* Email Input */}
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-xs font-semibold">Email Address</Label>
+          <div className="relative group">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-amber-600 transition-colors" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="student@unilag.edu.ng"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              disabled={loginLoading || googleLoading}
+              className="h-11 pl-10 focus-visible:ring-amber-500"
+            />
+          </div>
+        </div>
+
+        {/* Password Input */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password" className="text-xs font-semibold">Password</Label>
+            <button
+              type="button"
+              onClick={() => toast.info('Please contact support to reset password.')}
+              className="text-xs text-amber-600 hover:underline font-medium transition-colors"
+            >
+              Forgot password?
+            </button>
+          </div>
+          <div className="relative group">
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-amber-600 transition-colors" />
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required
+              disabled={loginLoading || googleLoading}
+              className="h-11 pl-10 pr-12 focus-visible:ring-amber-500"
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Remember Me Checkbox */}
+        <div className="flex items-center space-x-2 pt-1">
+          <Checkbox
+            id="remember"
+            checked={formData.remember}
+            onCheckedChange={(checked) => setFormData({ ...formData, remember: Boolean(checked) })}
+          />
+          <Label htmlFor="remember" className="text-xs font-normal cursor-pointer text-slate-600 select-none">
+            Keep me logged in
+          </Label>
+        </div>
+
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          className="w-full h-11 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all text-sm mt-2"
+          disabled={loginLoading || googleLoading}
+        >
+          {loginLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Signing in...
+            </>
+          ) : (
+            <>
+              Sign In
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </>
+          )}
+        </Button>
+
+        {/* Quick Role Fillers for Testing */}
+        <div className="pt-2 text-center border-t border-slate-100 mt-4">
+          <p className="text-[11px] text-slate-400 font-semibold mb-2">QUICK DEMO SIMULATION LOGINS</p>
+          <div className="flex justify-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                setFormData({ email: 'blessing.okon@student.unilag.edu.ng', password: 'Password123!', remember: true });
+                login('blessing.okon@student.unilag.edu.ng', 'Password123!');
+              }}
+              className="text-[10px] text-orange-700 border-orange-200 bg-orange-50/50"
+            >
+              Customer Demo
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                setFormData({ email: 'tunde.bakare@rush.ng', password: 'Password123!', remember: true });
+                login('tunde.bakare@rush.ng', 'Password123!');
+              }}
+              className="text-[10px] text-emerald-700 border-emerald-200 bg-emerald-50/50"
+            >
+              Artisan Demo
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                setFormData({ email: 'admin@rush.ng', password: 'Password123!', remember: true });
+                login('admin@rush.ng', 'Password123!');
+              }}
+              className="text-[10px] text-slate-700 border-slate-200 bg-slate-100"
+            >
+              Admin Demo
+            </Button>
+          </div>
+        </div>
+
+        {/* Sign Up Link */}
+        <p className="text-center text-xs text-slate-500 pt-2">
+          Don't have an account?{' '}
+          <button
+            type="button"
+            onClick={() => setView('register')}
+            className="text-amber-600 font-semibold hover:underline transition-colors"
+          >
+            Create one now
+          </button>
+        </p>
+      </form>
+    </div>
   );
 }
