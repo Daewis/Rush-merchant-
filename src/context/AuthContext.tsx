@@ -6,6 +6,7 @@ interface AuthContextType {
   user: UserProfile | null;
   role: UserRole;
   loginAs: (role: UserRole) => void;
+  logout: () => void;
   updateWallet: (amountDelta: number, escrowDelta?: number) => void;
   updateProfile: (updated: Partial<UserProfile>) => void;
 }
@@ -111,6 +112,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const logout = () => {
+    setUser(null);
+    setStoreUser(null as any);
+  };
+
   const updateWallet = (amountDelta: number, escrowDelta: number = 0) => {
     setUser((prev) => {
       if (!prev) return null;
@@ -132,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         role: user?.role || "customer",
         loginAs,
+        logout,
         updateWallet,
         updateProfile,
       }}

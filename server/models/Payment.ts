@@ -16,9 +16,9 @@ export enum PaymentProviderEnum {
 }
 
 export interface IPayment extends Document {
-  jobId: mongoose.Types.ObjectId;
-  customerId: mongoose.Types.ObjectId;
-  providerId: mongoose.Types.ObjectId;
+  jobId?: mongoose.Types.ObjectId;
+  customerId?: mongoose.Types.ObjectId;
+  providerId?: mongoose.Types.ObjectId;
   amount: number;
   platformFee: number;
   providerEarnings: number;
@@ -38,13 +38,13 @@ export interface IPayment extends Document {
 
 const PaymentSchema = new Schema<IPayment>(
   {
-    jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: true },
-    customerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    providerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: false, default: null },
+    customerId: { type: Schema.Types.ObjectId, ref: 'User', required: false, default: null },
+    providerId: { type: Schema.Types.ObjectId, ref: 'User', required: false, default: null },
     amount: { type: Number, required: true },
     platformFee: { type: Number, required: true, default: 0 },
     providerEarnings: { type: Number, required: true },
-    provider: { type: String, enum: Object.values(PaymentProviderEnum), default: PaymentProviderEnum.OPAY },
+    provider: { type: String, enum: Object.values(PaymentProviderEnum), default: PaymentProviderEnum.PAYSTACK },
     reference: { type: String, required: true, unique: true },
     transactionId: { type: String, default: null },
     status: { type: String, enum: Object.values(PaymentStatus), default: PaymentStatus.PENDING },

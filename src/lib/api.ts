@@ -149,6 +149,10 @@ export const paymentApi = {
     api.post<ApiResponse<{ payment: Payment }>>('/payments', data),
   initialize: (data: any) =>
     api.post<ApiResponse<any>>('/payments', data),
+  initializePaystack: (data: { amount: number; email?: string; job_id?: string; payment_type?: string; callback_url?: string }) =>
+    api.post<ApiResponse<{ authorization_url: string; access_code: string; reference: string; public_key?: string }>>('/payments/paystack/initialize', data),
+  verifyPaystack: (data: { reference: string }) =>
+    api.post<ApiResponse<any>>('/payments/paystack/verify', data),
   verify: (data: { reference: string }) =>
     api.post<ApiResponse>('/payments/verify', data),
   job: (jobId: string) =>

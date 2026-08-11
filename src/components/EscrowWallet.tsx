@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Wallet,
   ArrowUpRight,
@@ -9,10 +9,16 @@ import {
   Lock,
   Plus,
   RefreshCw,
+  ExternalLink,
+  CheckCircle2,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { useMarketplace } from "../context/MarketplaceContext";
 import { GatewayType } from "../types";
+import { paymentApi } from "../lib/api";
 
 export const EscrowWallet: React.FC = () => {
   const { user } = useAuth();
@@ -21,7 +27,16 @@ export const EscrowWallet: React.FC = () => {
   // Top Up Modal State
   const [showTopUp, setShowTopUp] = useState<boolean>(false);
   const [amount, setAmount] = useState<number>(20000);
-  const [gateway, setGateway] = useState<GatewayType>("OPay");
+  const [gateway, setGateway] = useState<GatewayType>("Paystack");
+  const [isInitializing, setIsInitializing] = useState<boolean>(false);
+
+  // Active Paystack Session State
+  const [paystackSession, setPaystackSession] = useState<{
+    reference: string;
+    authorization_url: string;
+    amount: number;
+  } | null>(null);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
 
   // Withdrawal Modal State
   const [showWithdraw, setShowWithdraw] = useState<boolean>(false);
@@ -29,21 +44,98 @@ export const EscrowWallet: React.FC = () => {
   const [bankName, setBankName] = useState<string>("OPay Digital Bank");
   const [accountNumber, setAccountNumber] = useState<string>("8012345678");
 
-  const handleTopUpSubmit = (e: React.FormEvent) => {
+  // Check URL query parameters on load for Paystack callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paystackRef = params.get("paystack_ref") || params.get("reference") || params.get("trxref");
+    const isSuccess = params.get("payment_success");
+
+    if (paystackRef && user) {
+      verifyPaystackRef(paystackRef);
+      // Clean up query string from address bar
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, [user]);
+
+  const verifyPaystackRef = async (ref: string) => {
+    setIsVerifying(true);
+    try {
+      const res = await paymentApi.verifyPaystack({ reference: ref });
+      if (res.data?.success) {
+        const verifiedAmount = res.data.data?.amount || amount;
+        addTransaction({
+          userId: user?.uid || "user",
+          type: "top_up",
+          amount: verifiedAmount,
+          reference: ref,
+          gateway: "Paystack",
+          status: "completed",
+          notes: `Verified Paystack live payment deposit of ₦${verifiedAmount.toLocaleString()}`,
+        });
+        toast.success(`Paystack Top-Up Verified! ₦${verifiedAmount.toLocaleString()} credited to wallet.`);
+        setPaystackSession(null);
+        setShowTopUp(false);
+      } else {
+        toast.error(res.data?.error || "Paystack verification pending or failed.");
+      }
+    } catch (err: any) {
+      console.error("Paystack verify error:", err);
+      toast.error(err.response?.data?.error || "Failed to verify Paystack payment.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleTopUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    addTransaction({
-      userId: user.uid,
-      type: "top_up",
-      amount,
-      reference: `${gateway.toUpperCase()}_TOPUP_${Date.now().toString().slice(-6)}`,
-      gateway,
-      status: "completed",
-      notes: `Direct Wallet Top-up via ${gateway} Checkout API`,
-    });
+    if (gateway === "Paystack") {
+      setIsInitializing(true);
+      try {
+        const res = await paymentApi.initializePaystack({
+          amount,
+          email: user.email || "customer@rushng.com",
+          payment_type: "top_up",
+        });
 
-    setShowTopUp(false);
+        if (res.data?.success && res.data.data?.authorization_url) {
+          const { authorization_url, reference } = res.data.data;
+          
+          setPaystackSession({
+            reference,
+            authorization_url,
+            amount,
+          });
+
+          // Open Paystack Checkout Window
+          window.open(authorization_url, "PaystackCheckout", "width=520,height=700,scrollbars=yes,resizable=yes");
+          toast.info("Paystack Checkout opened in popup! Complete your transaction and click Verify.");
+        } else {
+          toast.error(res.data?.error || "Failed to initialize Paystack transaction");
+        }
+      } catch (err: any) {
+        console.error("Paystack topup init error:", err);
+        const errMsg = err.response?.data?.error || err.message || "Paystack initialization error";
+        toast.error(errMsg);
+      } finally {
+        setIsInitializing(false);
+      }
+    } else {
+      // Direct Top-up for other gateways
+      addTransaction({
+        userId: user.uid,
+        type: "top_up",
+        amount,
+        reference: `${gateway.toUpperCase()}_TOPUP_${Date.now().toString().slice(-6)}`,
+        gateway,
+        status: "completed",
+        notes: `Direct Wallet Top-up via ${gateway} Checkout API`,
+      });
+      toast.success(`₦${amount.toLocaleString()} loaded into wallet via ${gateway}`);
+      setShowTopUp(false);
+    }
   };
 
   const handleWithdrawSubmit = (e: React.FormEvent) => {
@@ -65,6 +157,7 @@ export const EscrowWallet: React.FC = () => {
       notes: `Payout to ${bankName} (${accountNumber})`,
     });
 
+    toast.success(`Withdrawal request of ₦${withdrawAmount.toLocaleString()} submitted.`);
     setShowWithdraw(false);
   };
 
@@ -82,7 +175,7 @@ export const EscrowWallet: React.FC = () => {
             </h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time balance settlement with automated escrow locking and instant OPay / Paystack payout hooks.
+            Real-time balance settlement with automated escrow locking and instant Paystack / OPay payout hooks.
           </p>
         </div>
 
@@ -147,18 +240,19 @@ export const EscrowWallet: React.FC = () => {
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="flex items-center gap-2 pt-1">
+            <span className="text-[11px] font-black bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+              Paystack Live
+            </span>
             <span className="text-[11px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200">
               OPay Direct
-            </span>
-            <span className="text-[11px] font-black bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200">
-              Paystack
             </span>
             <span className="text-[11px] font-black bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200">
               Flutterwave
             </span>
           </div>
           <p className="text-[10px] text-slate-400">
-            Zero fee deposit & instant NUBAN payouts
+            Live Paystack API initialized for cards & bank transfers
           </p>
         </div>
       </div>
@@ -235,63 +329,138 @@ export const EscrowWallet: React.FC = () => {
       {showTopUp && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
-            <h3 className="font-extrabold text-base text-slate-900">
-              Top-up Escrow Wallet
+            <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-blue-600" />
+              <span>Top-up Escrow Wallet</span>
             </h3>
 
-            <form onSubmit={handleTopUpSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Amount (₦)
-                </label>
-                <input
-                  type="number"
-                  required
-                  min={1000}
-                  value={amount}
-                  onChange={(e) => setAmount(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-sm font-extrabold bg-slate-50 border border-slate-200 rounded-lg outline-none"
-                />
-              </div>
+            {paystackSession ? (
+              <div className="space-y-4 bg-slate-50 p-4 rounded-xl border border-blue-200">
+                <div className="flex items-center gap-2 text-blue-900 font-bold text-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Paystack Session Active</span>
+                </div>
+                
+                <p className="text-xs text-slate-600">
+                  Amount: <strong className="text-slate-900 font-extrabold">₦{paystackSession.amount.toLocaleString()}</strong>
+                  <br />
+                  Reference: <code className="text-[11px] font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-800">{paystackSession.reference}</code>
+                </p>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Select Payment Gateway
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["OPay", "Paystack", "Flutterwave"] as GatewayType[]).map((gt) => (
-                    <button
-                      key={gt}
-                      type="button"
-                      onClick={() => setGateway(gt)}
-                      className={`p-2.5 rounded-xl border text-xs font-bold transition ${
-                        gateway === gt
-                          ? "bg-slate-900 text-white border-slate-900"
-                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                      }`}
-                    >
-                      {gt}
-                    </button>
-                  ))}
+                <div className="flex flex-col gap-2 pt-2">
+                  <a
+                    href={paystackSession.authorization_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-lg text-center flex items-center justify-center gap-1.5 shadow-xs transition"
+                  >
+                    <span>Open Paystack Checkout Page</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+
+                  <button
+                    type="button"
+                    disabled={isVerifying}
+                    onClick={() => verifyPaystackRef(paystackSession.reference)}
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-lg flex items-center justify-center gap-2 shadow-xs transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {isVerifying ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Verifying with Paystack...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Confirm & Verify Payment Settlement</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaystackSession(null)}
+                    className="text-[11px] font-bold text-slate-500 hover:text-slate-700 text-center py-1 cursor-pointer"
+                  >
+                    Change amount or gateway
+                  </button>
                 </div>
               </div>
+            ) : (
+              <form onSubmit={handleTopUpSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Amount (₦)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1000}
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    className="w-full px-3 py-2 text-sm font-extrabold bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowTopUp(false)}
-                  className="px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs"
-                >
-                  Proceed to Checkout API
-                </button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Select Payment Gateway
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["Paystack", "OPay", "Flutterwave"] as GatewayType[]).map((gt) => (
+                      <button
+                        key={gt}
+                        type="button"
+                        onClick={() => setGateway(gt)}
+                        className={`p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                          gateway === gt
+                            ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                            : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        {gt === "Paystack" ? "Paystack (Live)" : gt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {gateway === "Paystack" && (
+                  <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200/80 text-[11px] text-blue-900 space-y-1">
+                    <p className="font-extrabold flex items-center gap-1.5 text-blue-800">
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                      Paystack Secure Gateway
+                    </p>
+                    <p className="text-slate-600">
+                      Pay with Credit/Debit Cards, Bank Transfer, USSD, Apple Pay or OPay.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowTopUp(false)}
+                    className="px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isInitializing}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {isInitializing ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Initializing Paystack...</span>
+                      </>
+                    ) : (
+                      <span>Proceed to {gateway} Checkout</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -355,13 +524,13 @@ export const EscrowWallet: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowWithdraw(false)}
-                  className="px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg"
+                  className="px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg shadow-xs"
+                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg shadow-xs cursor-pointer"
                 >
                   Confirm Payout NUBAN
                 </button>
@@ -373,3 +542,4 @@ export const EscrowWallet: React.FC = () => {
     </div>
   );
 };
+
