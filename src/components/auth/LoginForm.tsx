@@ -85,23 +85,35 @@ export function LoginForm() {
           <span>Continue with Google</span>
         </Button>
 
-        <div className="relative flex items-center justify-center my-4">
-          <div className="border-t border-slate-200 w-full" />
-          <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-slate-400 font-semibold absolute">
-            or sign in with email
-          </span>
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-[11px] tracking-wider text-slate-400 font-semibold">
+              or sign in with email
+            </span>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 pt-1">
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700"
+            className="flex flex-col gap-1 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700"
           >
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
+            <div className="flex items-center gap-2 font-semibold">
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+              <span>Sign In Notice</span>
+            </div>
+            <p className="pl-6 text-red-600 leading-relaxed">{error}</p>
+            {error.toLowerCase().includes('popup') && (
+              <p className="pl-6 text-[11px] text-slate-500 pt-1 font-medium">
+                💡 <strong>Tip:</strong> Click the popup-block icon in your browser's address bar to allow popups, or open this page in a new tab.
+              </p>
+            )}
           </motion.div>
         )}
 
@@ -189,58 +201,15 @@ export function LoginForm() {
           )}
         </Button>
 
-        {/* Quick Role Fillers for Testing */}
-        <div className="pt-2 text-center border-t border-slate-100 mt-4">
-          <p className="text-[11px] text-slate-400 font-semibold mb-2">QUICK DEMO SIMULATION LOGINS</p>
-          <div className="flex justify-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="xs"
-              onClick={() => {
-                setFormData({ email: 'blessing.okon@student.unilag.edu.ng', password: 'Password123!', remember: true });
-                login('blessing.okon@student.unilag.edu.ng', 'Password123!');
-              }}
-              className="text-[10px] text-orange-700 border-orange-200 bg-orange-50/50"
-            >
-              Customer Demo
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="xs"
-              onClick={() => {
-                setFormData({ email: 'tunde.bakare@rush.ng', password: 'Password123!', remember: true });
-                login('tunde.bakare@rush.ng', 'Password123!');
-              }}
-              className="text-[10px] text-emerald-700 border-emerald-200 bg-emerald-50/50"
-            >
-              Artisan Demo
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="xs"
-              onClick={() => {
-                setFormData({ email: 'admin@rush.ng', password: 'Password123!', remember: true });
-                login('admin@rush.ng', 'Password123!');
-              }}
-              className="text-[10px] text-slate-700 border-slate-200 bg-slate-100"
-            >
-              Admin Demo
-            </Button>
-          </div>
-        </div>
-
         {/* Sign Up Link */}
-        <p className="text-center text-xs text-slate-500 pt-2">
+        <p className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100">
           Don't have an account?{' '}
           <button
             type="button"
             onClick={() => setView('register')}
-            className="text-amber-600 font-semibold hover:underline transition-colors"
+            className="font-bold text-amber-600 hover:underline cursor-pointer"
           >
-            Create one now
+            Create an Account
           </button>
         </p>
       </form>

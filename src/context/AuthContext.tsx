@@ -21,94 +21,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storeUser) {
       return {
         uid: storeUser.id || storeUser.uid || "user_1",
-        displayName: storeUser.full_name || storeUser.displayName || "Blessing Okon",
-        email: storeUser.email || "blessing.okon@student.unilag.edu.ng",
-        phone: storeUser.phone || "08012345678",
-        avatar: storeUser.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        displayName: storeUser.full_name || storeUser.displayName || storeUser.email?.split("@")[0] || "User",
+        email: storeUser.email || "",
+        phone: storeUser.phone || "",
+        avatar: storeUser.avatar || "",
         role: (storeUser.role === "provider" ? "artisan" : storeUser.role) as UserRole || "customer",
-        walletBalance: storeUser.walletBalance ?? 45000,
-        escrowHeld: storeUser.escrowHeld ?? 15000,
-        ninVerified: true,
-        bvnVerified: true,
-        campusHub: "Unilag Akoka Campus",
+        walletBalance: storeUser.walletBalance ?? 0,
+        escrowHeld: storeUser.escrowHeld ?? 0,
+        ninVerified: (storeUser as any).ninVerified ?? storeUser.is_verified ?? false,
+        bvnVerified: (storeUser as any).bvnVerified ?? storeUser.is_verified ?? false,
+        campusHub: storeUser.campusHub || "Unilag Akoka Campus",
       };
     }
-    return {
-      uid: "user_customer_1",
-      displayName: "Blessing Okon",
-      email: "blessing.okon@student.unilag.edu.ng",
-      phone: "08012345678",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-      role: "customer",
-      walletBalance: 45000,
-      escrowHeld: 15000,
-      nin: "12345678901",
-      bvn: "22233344455",
-      ninVerified: true,
-      bvnVerified: true,
-      campusHub: "Unilag Akoka Campus",
-    };
+    return null;
   });
 
   useEffect(() => {
     if (storeUser) {
       setUser({
         uid: storeUser.id || storeUser.uid || "user_1",
-        displayName: storeUser.full_name || storeUser.displayName || "User",
+        displayName: storeUser.full_name || storeUser.displayName || storeUser.email?.split("@")[0] || "User",
         email: storeUser.email || "",
         phone: storeUser.phone || "",
-        avatar: storeUser.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        avatar: storeUser.avatar || "",
         role: (storeUser.role === "provider" ? "artisan" : storeUser.role) as UserRole || "customer",
-        walletBalance: storeUser.walletBalance ?? 45000,
+        walletBalance: storeUser.walletBalance ?? 0,
         escrowHeld: storeUser.escrowHeld ?? 0,
-        campusHub: "Unilag Akoka Campus",
+        campusHub: storeUser.campusHub || "Unilag Akoka Campus",
       });
+    } else {
+      setUser(null);
     }
   }, [storeUser]);
 
   const loginAs = (role: UserRole) => {
-    if (role === "customer") {
-      const newUser: UserProfile = {
-        uid: "user_customer_1",
-        displayName: "Blessing Okon",
-        email: "blessing.okon@student.unilag.edu.ng",
-        phone: "08012345678",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-        role: "customer",
-        walletBalance: 45000,
-        escrowHeld: 15000,
-        campusHub: "Unilag Akoka Campus",
+    if (user) {
+      const updatedUser: UserProfile = {
+        ...user,
+        role,
       };
-      setUser(newUser);
-      setStoreUser({ id: newUser.uid, full_name: newUser.displayName, email: newUser.email, role: "customer" } as any);
-    } else if (role === "artisan") {
-      const newUser: UserProfile = {
-        uid: "artisan_1",
-        displayName: "Engr. Tunde Bakare",
-        email: "tunde.bakare@rush.ng",
-        phone: "08031112233",
-        avatar: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop&q=80",
-        role: "artisan",
-        walletBalance: 128000,
-        escrowHeld: 15000,
-        ninVerified: true,
-        bvnVerified: true,
-        campusHub: "Unilag Akoka Campus",
-      };
-      setUser(newUser);
-      setStoreUser({ id: newUser.uid, full_name: newUser.displayName, email: newUser.email, role: "provider" } as any);
+      setUser(updatedUser);
+      setStoreUser({
+        ...storeUser,
+        role: role === "artisan" ? "provider" : role,
+      } as any);
     } else {
-      const newUser: UserProfile = {
-        uid: "admin_1",
-        displayName: "Rush Campus Administrator",
-        email: "admin@rush.ng",
-        role: "admin",
-        walletBalance: 500000,
-        escrowHeld: 0,
-        campusHub: "All Campus Hubs",
-      };
-      setUser(newUser);
-      setStoreUser({ id: newUser.uid, full_name: newUser.displayName, email: newUser.email, role: "admin" } as any);
+      useAppStore.getState().setView("login");
     }
   };
 

@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { useMarketplace } from '../../context/MarketplaceContext';
+import { useAuth } from '../../context/AuthContext';
+import { JobPost, EscrowTransaction } from '../../types';
 import { StatsCard } from './StatsCard';
 import { ChartWidget } from './ChartWidget';
 import { Package, Truck, Wallet, Clock, Plus, ArrowRight, MapPin } from 'lucide-react';
@@ -8,114 +10,78 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { motion } from 'framer-motion';
-import { jobApi } from '@/lib/api';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-
-interface DeliveryItem {
-  id: string;
-  trackingCode: string;
-  pickup: string;
-  dropoff: string;
-  status: 'pending' | 'in_transit' | 'delivered' | 'cancelled';
-  amount: number;
-  provider?: {
-    name: string;
-    avatar?: string;
-  };
-  estimatedTime?: string;
-}
 
 export function CustomerDashboard() {
-  const { user, setView } = useAppStore();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalBookings: 12,
-    activeDeliveries: 2,
-    walletBalance: 45000,
-    completedOrders: 10,
-    savings: 3500,
-  });
-  const [recentDeliveries, setRecentDeliveries] = useState<DeliveryItem[]>([
-    {
-      id: 'job-101',
-      trackingCode: 'RUSH-8821',
-      pickup: 'Unilag Senate Building',
-      dropoff: 'Moremi Hall Block B',
-      status: 'in_transit',
-      amount: 2500,
-      provider: { name: 'Engr. Tunde' },
-      estimatedTime: '12 mins',
-    },
-    {
-      id: 'job-102',
-      trackingCode: 'RUSH-7734',
-      pickup: 'Yaba Tech Gate',
-      dropoff: 'Faculty of Engineering',
-      status: 'pending',
-      amount: 1800,
-      provider: { name: 'Sola Tech' },
-      estimatedTime: '20 mins',
-    },
-  ]);
-  const [weeklySpending, setWeeklySpending] = useState<{ label: string; value: number }[]>([
+  const { setView } = useAppStore();
+  const { user: authUser } = useAuth();
+  const { jobs, transactions } = useMarketplace();
+
+  // Find jobs created by current logged in user
+  const userJobs = authUser
+    ? jobs.filter(
+        (j: JobPost) =>
+          j.customerId === authUser.uid ||
+          j.customerId === (authUser as any).id ||
+          (authUser.displayName && j.customerName === authUser.displayName)
+      )
+    : [];
+
+  // Display user's jobs first (sorted newest first), then other campus jobs
+  const otherJobs = jobs.filter((j: JobPost) => !userJobs.some((uj: JobPost) => uj.id === j.id));
+  const displayOrders = [...userJobs, ...otherJobs];
+
+  // Derive stats dynamically from Marketplace state
+  const activeDeliveriesCount = (userJobs.length > 0 ? userJobs : jobs).filter(
+    (j: JobPost) => j.status === 'open' || j.status === 'assigned' || j.status === 'in_progress'
+  ).length;
+
+  const totalBookingsCount = userJobs.length > 0 ? userJobs.length : jobs.length;
+
+  const completedOrdersCount = (userJobs.length > 0 ? userJobs : jobs).filter(
+    (j: JobPost) => j.status === 'completed'
+  ).length;
+
+  const walletBalance = authUser?.walletBalance ?? 45000;
+
+  // Weekly spending chart data
+  const totalEscrowHold = transactions
+    .filter((t: EscrowTransaction) => t.type === 'escrow_hold')
+    .reduce((sum: number, t: EscrowTransaction) => sum + t.amount, 0);
+
+  const weeklySpending = [
     { label: 'Mon', value: 3500 },
     { label: 'Tue', value: 1800 },
     { label: 'Wed', value: 4200 },
     { label: 'Thu', value: 2500 },
     { label: 'Fri', value: 6000 },
     { label: 'Sat', value: 1200 },
-    { label: 'Sun', value: 0 },
-  ]);
+    { label: 'Sun', value: totalEscrowHold > 0 ? totalEscrowHold : 2500 },
+  ];
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    try {
-      const [statsRes, deliveriesRes, spendingRes] = await Promise.allSettled([
-        jobApi.getCustomerStats(),
-        jobApi.getRecentDeliveries(),
-        jobApi.getWeeklySpending(),
-      ]);
-
-      if (statsRes.status === 'fulfilled' && statsRes.value?.data?.data) {
-        setStats((prev) => ({ ...prev, ...statsRes.value.data.data }));
-      }
-      if (deliveriesRes.status === 'fulfilled' && deliveriesRes.value?.data?.data) {
-        setRecentDeliveries(deliveriesRes.value.data.data);
-      }
-      if (spendingRes.status === 'fulfilled' && spendingRes.value?.data?.data) {
-        setWeeklySpending(spendingRes.value.data.data);
-      }
-    } catch {
-      // Fallback state retained on network error
-    } finally {
-      setLoading(false);
-    }
+  const statusColors: Record<string, string> = {
+    open: 'bg-amber-100 text-amber-800 border border-amber-200',
+    assigned: 'bg-blue-100 text-blue-800 border border-blue-200',
+    pending: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+    in_progress: 'bg-blue-100 text-blue-800 border border-blue-200',
+    in_transit: 'bg-blue-100 text-blue-800 border border-blue-200',
+    handshake_verified: 'bg-purple-100 text-purple-800 border border-purple-200',
+    completed: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+    delivered: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+    cancelled: 'bg-red-100 text-red-800 border border-red-200',
+    disputed: 'bg-rose-100 text-rose-800 border border-rose-200',
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <LoadingSpinner text="Loading dashboard..." />
-      </div>
-    );
-  }
-
-  const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-700',
-    in_transit: 'bg-blue-100 text-blue-700',
-    delivered: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700',
-  };
-
-  const statusLabels = {
+  const statusLabels: Record<string, string> = {
+    open: 'Open / Bidding',
+    assigned: 'Assigned',
     pending: 'Pending',
+    in_progress: 'In Progress',
     in_transit: 'In Transit',
+    handshake_verified: 'OTP Verified',
+    completed: 'Completed',
     delivered: 'Delivered',
     cancelled: 'Cancelled',
+    disputed: 'Disputed',
   };
 
   return (
@@ -129,12 +95,12 @@ export function CustomerDashboard() {
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Welcome back, {user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Blessing'}! 👋
+              Welcome back, {authUser?.displayName?.split(' ')[0] || authUser?.email?.split('@')[0] || 'User'}! 👋
             </h2>
             <p className="text-white/80 text-sm mt-1 flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-4 w-4" />
-                Unilag Akoka Campus Hub
+                {authUser?.campusHub || 'Unilag Akoka Campus Hub'}
               </span>
               <span className="hidden sm:inline">•</span>
               <span className="inline-flex items-center gap-1">
@@ -146,7 +112,7 @@ export function CustomerDashboard() {
           <div className="flex gap-3">
             <Button
               onClick={() => setView('job-post')}
-              className="bg-white text-orange-600 hover:bg-slate-50 font-semibold shadow"
+              className="bg-white text-orange-600 hover:bg-slate-50 font-semibold shadow cursor-pointer"
             >
               <Plus className="h-4 w-4 mr-1.5" />
               Book New Job / Express Dispatch
@@ -164,26 +130,26 @@ export function CustomerDashboard() {
       >
         <StatsCard
           title="Active Deliveries"
-          value={stats.activeDeliveries}
+          value={activeDeliveriesCount}
           icon={Truck}
           color="orange"
           trend={{ value: 12, label: 'vs last week' }}
         />
         <StatsCard
           title="Total Bookings"
-          value={stats.totalBookings}
+          value={totalBookingsCount}
           icon={Package}
           color="blue"
         />
         <StatsCard
           title="Completed Orders"
-          value={stats.completedOrders}
+          value={completedOrdersCount}
           icon={Clock}
           color="green"
         />
         <StatsCard
           title="Wallet Balance"
-          value={`₦${stats.walletBalance.toLocaleString()}`}
+          value={`₦${walletBalance.toLocaleString()}`}
           icon={Wallet}
           color="emerald"
         />
@@ -207,21 +173,21 @@ export function CustomerDashboard() {
                 onClick={() => setView('jobs')}
                 variant="ghost"
                 size="sm"
-                className="text-xs text-amber-600 gap-1"
+                className="text-xs text-amber-600 gap-1 cursor-pointer"
               >
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
             <CardContent>
-              {recentDeliveries.length === 0 ? (
+              {displayOrders.length === 0 ? (
                 <div className="text-center py-10 text-slate-400">
                   <Package className="h-10 w-10 mx-auto text-slate-300 mb-2" />
-                  <p className="text-sm font-medium text-slate-600">No active bookings</p>
+                  <p className="text-sm font-medium text-slate-600">No active bookings yet</p>
                   <Button
                     onClick={() => setView('job-post')}
                     variant="gradient"
                     size="sm"
-                    className="mt-3"
+                    className="mt-3 cursor-pointer"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Book Now
@@ -229,42 +195,55 @@ export function CustomerDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {recentDeliveries.map((item, index) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all duration-200"
-                    >
-                      <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                        <Avatar className="h-10 w-10 shrink-0">
-                          <AvatarFallback className="bg-amber-100 text-amber-800 text-xs font-bold">
-                            {item.provider?.name?.charAt(0) || 'P'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="space-y-1 flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-mono font-bold text-xs text-amber-600">
-                              #{item.trackingCode}
-                            </span>
-                            <Badge className={statusColors[item.status]}>
-                              {statusLabels[item.status]}
-                            </Badge>
+                  {displayOrders.map((item) => {
+                    const isMyJob = authUser && (item.customerId === authUser.uid || item.customerId === (authUser as any).id || item.customerName === authUser.displayName);
+                    const otpDisplay = item.handshakeOtp ? `OTP: [${item.handshakeOtp}]` : `#${item.id.replace('job_', '')}`;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                          <Avatar className="h-10 w-10 shrink-0">
+                            <AvatarFallback className="bg-amber-100 text-amber-800 text-xs font-bold">
+                              {item.artisanName?.charAt(0) || item.title?.charAt(0) || 'R'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono font-bold text-xs text-amber-600">
+                                {otpDisplay}
+                              </span>
+                              <Badge className={statusColors[item.status] || 'bg-slate-100 text-slate-700'}>
+                                {statusLabels[item.status] || item.status}
+                              </Badge>
+                              {isMyJob && (
+                                <span className="bg-orange-100 text-orange-800 border border-orange-200 text-[10px] px-2 py-0.5 rounded font-bold">
+                                  My Order
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs font-bold text-slate-800 truncate">
+                              {item.title}
+                            </p>
+                            <p className="text-[11px] text-slate-500 truncate flex items-center gap-1">
+                              <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
+                              {item.location || item.hub}
+                            </p>
                           </div>
-                          <p className="text-xs text-slate-500 truncate flex items-center gap-1">
-                            <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
-                            {item.pickup} → {item.dropoff}
-                          </p>
+                        </div>
+                        <div className="text-right shrink-0 ml-4">
+                          <span className="font-bold text-sm block text-slate-900">
+                            ₦{item.budget.toLocaleString()}
+                          </span>
+                          <span className="text-[11px] text-slate-400 block font-medium">
+                            {item.artisanName || 'Awaiting Bids'}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-right shrink-0 ml-4">
-                        <span className="font-bold text-sm block text-slate-900">
-                          ₦{item.amount.toLocaleString()}
-                        </span>
-                        {item.estimatedTime && (
-                          <span className="text-[11px] text-slate-400">{item.estimatedTime}</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

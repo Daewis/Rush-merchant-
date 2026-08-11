@@ -47,7 +47,15 @@ const MainAppContent: React.FC = () => {
     }
   }, [currentView]);
 
+  const protectedTabs = ["dashboard", "track_hud", "wallet", "disputes"];
+
   const handleTabChange = (tab: string) => {
+    if (!user && protectedTabs.includes(tab)) {
+      setActiveTab("login");
+      setView("login");
+      return;
+    }
+
     setActiveTab(tab);
     if (tab === "home") {
       setView("home");

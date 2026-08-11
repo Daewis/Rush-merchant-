@@ -185,18 +185,16 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Desktop Controls */}
         <div className="hidden md:flex items-center gap-2 sm:gap-3">
-          {/* Landing Page */}
-          <button
-            onClick={() => handleNavigate("home")}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-xs transition cursor-pointer ${
-              activeTab === "home"
-                ? "bg-orange-100 text-orange-700 border border-orange-200"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <HomeIcon className="w-4 h-4" />
-            <span>Landing Page</span>
-          </button>
+          {/* Home Button - Only shown when navigating away from Home */}
+          {activeTab !== "home" && (
+            <button
+              onClick={() => handleNavigate("home")}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-xs text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+            >
+              <HomeIcon className="w-4 h-4 text-orange-600" />
+              <span>Home</span>
+            </button>
+          )}
 
           {/* Conditional Auth vs Logged-In Controls */}
           {isLoggedIn ? (
@@ -447,15 +445,15 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Navigation Links */}
           <div className="space-y-1 border-t border-slate-100 pt-3">
-            <button
-              onClick={() => handleNavigate("home")}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${
-                activeTab === "home" ? "bg-orange-100 text-orange-800" : "text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <HomeIcon className="w-4 h-4 text-orange-600" />
-              <span>Landing Page</span>
-            </button>
+            {activeTab !== "home" && (
+              <button
+                onClick={() => handleNavigate("home")}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <HomeIcon className="w-4 h-4 text-orange-600" />
+                <span>Home</span>
+              </button>
+            )}
 
             {isLoggedIn ? (
               <>

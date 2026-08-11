@@ -208,9 +208,22 @@ export function useAuth() {
       return true;
     } catch (err: any) {
       console.error('Google Auth error:', err);
-      const errorMsg = err.message || 'Google Sign-In failed. Please try again.';
+      let errorMsg = 'Google Sign-In failed. Please try again.';
+      
+      if (err.code === 'auth/popup-blocked' || err.message?.includes('popup-blocked')) {
+        errorMsg = 'Google Sign-In popup was blocked by your browser. Please allow popups for this site in your browser URL bar or click Google Sign-In again.';
+      } else if (err.message?.includes('Database is closing') || err.message?.includes('hidden') || err.code === 'auth/internal-error') {
+        errorMsg = 'Google Auth storage was restricted in the preview iframe. Please open the app in a new browser tab to sign in with Google, or log in with Email & Password.';
+      } else if (err.code === 'auth/popup-closed-by-user' || err.message?.includes('popup-closed-by-user')) {
+        errorMsg = 'Sign-in window was closed before completing. Please try again.';
+      } else if (err.code === 'auth/cancelled-popup-request' || err.message?.includes('cancelled-popup-request')) {
+        errorMsg = 'Previous sign-in request was cancelled. Please click Continue with Google again.';
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+
       setError({ message: errorMsg });
-      toast.error('Google Sign-In failed', { description: errorMsg });
+      toast.error('Google Sign-In Notice', { description: errorMsg, duration: 6000 });
       return false;
     } finally {
       setGoogleLoading(false);

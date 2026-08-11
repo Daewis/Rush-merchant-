@@ -11,6 +11,9 @@ import {
   Sparkles,
   MapPin,
   HelpCircle,
+  Lock,
+  LogIn,
+  UserPlus,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useMarketplace } from "../context/MarketplaceContext";
@@ -37,6 +40,22 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
     (d) => d.status === "open" || d.status === "under_review"
   ).length;
 
+  const handleProtectedTabClick = (tabKey: string) => {
+    if (!user) {
+      setActiveTab("login");
+    } else {
+      setActiveTab(tabKey);
+    }
+  };
+
+  const handlePostJobClick = () => {
+    if (!user) {
+      setActiveTab("login");
+    } else {
+      onOpenPostJob();
+    }
+  };
+
   return (
     <aside className="w-full lg:w-64 shrink-0">
       {/* Mobile Horizontal Scrollable Tab Bar (< lg) */}
@@ -55,15 +74,16 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           </button>
 
           <button
-            onClick={() => setActiveTab("dashboard")}
+            onClick={() => handleProtectedTabClick("dashboard")}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition cursor-pointer ${
               activeTab === "dashboard"
                 ? "bg-orange-600 text-white shadow-xs font-bold"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>Dashboard</span>
+            {!user && <Lock className="w-3 h-3 text-slate-400 ml-0.5" />}
           </button>
 
           <button
@@ -79,7 +99,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           </button>
 
           <button
-            onClick={() => setActiveTab("track_hud")}
+            onClick={() => handleProtectedTabClick("track_hud")}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition cursor-pointer ${
               activeTab === "track_hud"
                 ? "bg-orange-600 text-white shadow-xs font-bold"
@@ -88,10 +108,14 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           >
             <Clock className="w-3.5 h-3.5 text-blue-500" />
             <span>Tracker</span>
-            {activeJobsCount > 0 && (
-              <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold animate-pulse">
-                {activeJobsCount}
-              </span>
+            {!user ? (
+              <Lock className="w-3 h-3 text-slate-400 ml-0.5" />
+            ) : (
+              activeJobsCount > 0 && (
+                <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold animate-pulse">
+                  {activeJobsCount}
+                </span>
+              )
             )}
           </button>
 
@@ -120,7 +144,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           </button>
 
           <button
-            onClick={() => setActiveTab("wallet")}
+            onClick={() => handleProtectedTabClick("wallet")}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition cursor-pointer ${
               activeTab === "wallet"
                 ? "bg-orange-600 text-white shadow-xs font-bold"
@@ -129,10 +153,11 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           >
             <Wallet className="w-3.5 h-3.5" />
             <span>Wallet</span>
+            {!user && <Lock className="w-3 h-3 text-slate-400 ml-0.5" />}
           </button>
 
           <button
-            onClick={() => setActiveTab("disputes")}
+            onClick={() => handleProtectedTabClick("disputes")}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition cursor-pointer ${
               activeTab === "disputes"
                 ? "bg-orange-600 text-white shadow-xs font-bold"
@@ -141,17 +166,55 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           >
             <ShieldAlert className="w-3.5 h-3.5" />
             <span>Disputes</span>
-            {openDisputesCount > 0 && (
-              <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">
-                {openDisputesCount}
-              </span>
+            {!user ? (
+              <Lock className="w-3 h-3 text-slate-400 ml-0.5" />
+            ) : (
+              openDisputesCount > 0 && (
+                <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">
+                  {openDisputesCount}
+                </span>
+              )
             )}
           </button>
         </div>
       </div>
 
       {/* Full Vertical Sidebar Navigation (lg:block) */}
-      <div className="hidden lg:block space-y-6">
+      <div className="hidden lg:block space-y-4">
+        {/* Guest Mode Card if not logged in */}
+        {!user && (
+          <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-slate-900/5 border border-amber-200/90 rounded-xl p-3.5 space-y-2.5 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-amber-600" />
+                Guest Mode
+              </span>
+              <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
+                Login Required
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-600 leading-snug">
+              Sign in or create an account to manage your dashboard, escrow wallet, job tracker, and submit bids.
+            </p>
+            <div className="grid grid-cols-2 gap-2 pt-0.5">
+              <button
+                onClick={() => setActiveTab("login")}
+                className="flex items-center justify-center gap-1.5 py-1.5 px-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-bold shadow-2xs transition active:scale-95 cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Log In</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("register")}
+                className="flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
+              >
+                <UserPlus className="w-3.5 h-3.5 text-orange-600" />
+                <span>Sign Up</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Card */}
         <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-2xs">
           <p className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
@@ -169,7 +232,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             >
               <div className="flex items-center gap-2.5">
                 <Home className="w-4 h-4 text-orange-600" />
-                <span>Landing Page</span>
+                <span>Home</span>
               </div>
               <span className="text-[10px] bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-bold uppercase">
                 Home
@@ -177,7 +240,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab("dashboard")}
+              onClick={() => handleProtectedTabClick("dashboard")}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeTab === "dashboard"
                   ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
@@ -194,9 +257,15 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
                     : "Customer Dashboard"}
                 </span>
               </div>
-              <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold uppercase">
-                {user?.role || "user"}
-              </span>
+              {user ? (
+                <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold uppercase">
+                  {user.role}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                  <Lock className="w-3 h-3 text-slate-400" /> Sign In
+                </span>
+              )}
             </button>
 
             <button
@@ -217,7 +286,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab("track_hud")}
+              onClick={() => handleProtectedTabClick("track_hud")}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeTab === "track_hud"
                   ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
@@ -228,9 +297,15 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
                 <Clock className="w-4 h-4 text-blue-600" />
                 <span>Live Job Tracker HUD</span>
               </div>
-              {activeJobsCount > 0 && (
-                <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-extrabold animate-pulse">
-                  {activeJobsCount} Active
+              {user ? (
+                activeJobsCount > 0 && (
+                  <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-extrabold animate-pulse">
+                    {activeJobsCount} Active
+                  </span>
+                )
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                  <Lock className="w-3 h-3 text-slate-400" /> Sign In
                 </span>
               )}
             </button>
@@ -264,7 +339,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab("wallet")}
+              onClick={() => handleProtectedTabClick("wallet")}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeTab === "wallet"
                   ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
@@ -275,10 +350,15 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
                 <Wallet className="w-4 h-4 text-emerald-600" />
                 <span>Escrow Ledger Wallet</span>
               </div>
+              {!user && (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                  <Lock className="w-3 h-3 text-slate-400" /> Sign In
+                </span>
+              )}
             </button>
 
             <button
-              onClick={() => setActiveTab("disputes")}
+              onClick={() => handleProtectedTabClick("disputes")}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeTab === "disputes"
                   ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
@@ -289,9 +369,15 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
                 <ShieldAlert className="w-4 h-4 text-red-500" />
                 <span>Accountability & Disputes</span>
               </div>
-              {openDisputesCount > 0 && (
-                <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">
-                  {openDisputesCount}
+              {user ? (
+                openDisputesCount > 0 && (
+                  <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">
+                    {openDisputesCount}
+                  </span>
+                )
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                  <Lock className="w-3 h-3 text-slate-400" /> Sign In
                 </span>
               )}
             </button>
@@ -325,10 +411,10 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           </div>
 
           <button
-            onClick={onOpenPostJob}
-            className="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-lg shadow-xs transition active:scale-95 cursor-pointer"
+            onClick={handlePostJobClick}
+            className="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-lg shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
           >
-            Post a Request Now
+            {user ? "Post a Request Now" : "Sign In to Post Request"}
           </button>
         </div>
 

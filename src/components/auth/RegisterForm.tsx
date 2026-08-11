@@ -57,7 +57,7 @@ const getPasswordStrength = (password: string) => {
 
 export function RegisterForm() {
   const { setView } = useAppStore();
-  const { register, googleLogin, registerLoading, googleLoading } = useAuth();
+  const { register, googleLogin, registerLoading, googleLoading, error: authError } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -197,15 +197,37 @@ export function RegisterForm() {
           <span>Sign up with Google</span>
         </Button>
 
-        <div className="relative flex items-center justify-center my-4">
-          <div className="border-t border-slate-200 w-full" />
-          <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-slate-400 font-semibold absolute">
-            or register with email
-          </span>
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-[11px] tracking-wider text-slate-400 font-semibold">
+              or register with email
+            </span>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-4 pt-1" noValidate>
+        {authError?.message && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-1 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700"
+          >
+            <div className="flex items-center gap-2 font-semibold">
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+              <span>Sign Up Notice</span>
+            </div>
+            <p className="pl-6 text-red-600 leading-relaxed">{authError.message}</p>
+            {authError.message.toLowerCase().includes('popup') && (
+              <p className="pl-6 text-[11px] text-slate-500 pt-1 font-medium">
+                💡 <strong>Tip:</strong> Click the popup-block icon in your browser's address bar to allow popups, or open this page in a new tab.
+              </p>
+            )}
+          </motion.div>
+        )}
         {/* Full Name */}
         <div className="space-y-1.5">
           <Label htmlFor="full_name" className="text-xs font-semibold">
@@ -215,7 +237,7 @@ export function RegisterForm() {
             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-amber-600 transition-colors" />
             <Input
               id="full_name"
-              placeholder="Blessing Okon"
+              placeholder="e.g. Chisom Adeleke"
               value={formData.full_name}
               onChange={(e) => handleInputChange('full_name', e.target.value)}
               disabled={registerLoading || googleLoading}

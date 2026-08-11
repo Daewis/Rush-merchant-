@@ -11,6 +11,8 @@ import {
 } from 'firebase/auth';
 import { 
   getFirestore, 
+  initializeFirestore,
+  Firestore,
   doc, 
   setDoc, 
   getDoc, 
@@ -30,7 +32,14 @@ const firebaseConfig = {
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app, firebaseConfigJson.firestoreDatabaseId || '(default)');
+let db: Firestore;
+try {
+  db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+  }, firebaseConfigJson.firestoreDatabaseId || '(default)');
+} catch (e) {
+  db = getFirestore(app, firebaseConfigJson.firestoreDatabaseId || '(default)');
+}
 const googleProvider = new GoogleAuthProvider();
 
 export {
