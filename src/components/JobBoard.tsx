@@ -46,8 +46,34 @@ export const JobBoard: React.FC<JobBoardProps> = ({ onOpenPostJob }) => {
   const [estimatedTime, setEstimatedTime] = useState<string>("1 Hour");
   const [coverNote, setCoverNote] = useState<string>("");
 
+  // Filter Scope State (default to my_jobs for customers, all for artisans/admins)
+  const [scopeFilter, setScopeFilter] = useState<"my_jobs" | "all">(
+    user?.role === "customer" ? "my_jobs" : "all"
+  );
+
+  const myJobs = user
+    ? jobs.filter(
+        (job) =>
+          job.customerId === user.uid ||
+          job.customerId === (user as any).id ||
+          (user.displayName && job.customerName === user.displayName) ||
+          (user.email && job.customerId === user.email)
+      )
+    : [];
+
   // Filter Logic
   const filteredJobs = jobs.filter((job) => {
+    const isMyJob =
+      user &&
+      (job.customerId === user.uid ||
+        job.customerId === (user as any).id ||
+        (user.displayName && job.customerName === user.displayName) ||
+        (user.email && job.customerId === user.email));
+
+    if (scopeFilter === "my_jobs" && !isMyJob) {
+      return false;
+    }
+
     const matchesHub =
       selectedHub === "All Campus Hubs" || job.hub === selectedHub;
     const matchesCat =
@@ -85,20 +111,51 @@ export const JobBoard: React.FC<JobBoardProps> = ({ onOpenPostJob }) => {
   return (
     <div className="space-y-6">
       {/* Top Banner & Active Category Filter */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Briefcase className="w-5 h-5 text-orange-600" />
-            <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">
-              Live Campus Job Board & Bidding
-            </h2>
+      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-orange-600" />
+              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">
+                Campus Job Board & Bidding
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              {scopeFilter === "my_jobs"
+                ? "Viewing your personal posted repair requests and escrow locks."
+                : "Browse open campus repairs. All jobs are 100% funded in Escrow before bidding begins."}
+            </p>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Browse open campus repairs. All jobs are 100% funded in Escrow before bidding begins.
-          </p>
+
+          {/* Scope Filter Switcher */}
+          <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 shrink-0 border border-slate-200">
+            <button
+              onClick={() => setScopeFilter("my_jobs")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                scopeFilter === "my_jobs"
+                  ? "bg-orange-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              My Posted Requests ({myJobs.length})
+            </button>
+            <button
+              onClick={() => setScopeFilter("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                scopeFilter === "all"
+                  ? "bg-orange-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              {user?.role === "admin"
+                ? `All Campus Jobs (Admin: ${jobs.length})`
+                : `All Campus Requests (${jobs.length})`}
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+        {/* Category Filters */}
+        <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-100">
           <span className="text-xs text-slate-400 font-medium shrink-0">
             Category:
           </span>
@@ -109,7 +166,7 @@ export const JobBoard: React.FC<JobBoardProps> = ({ onOpenPostJob }) => {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   selectedCategory === cat
-                    ? "bg-orange-600 text-white"
+                    ? "bg-slate-900 text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >

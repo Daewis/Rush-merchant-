@@ -22,22 +22,24 @@ export function CustomerDashboard() {
         (j: JobPost) =>
           j.customerId === authUser.uid ||
           j.customerId === (authUser as any).id ||
-          (authUser.displayName && j.customerName === authUser.displayName)
+          (authUser.displayName && j.customerName === authUser.displayName) ||
+          (authUser.email && j.customerId === authUser.email)
       )
     : [];
 
-  // Display user's jobs first (sorted newest first), then other campus jobs
-  const otherJobs = jobs.filter((j: JobPost) => !userJobs.some((uj: JobPost) => uj.id === j.id));
-  const displayOrders = [...userJobs, ...otherJobs];
+  const isAdmin = authUser?.role === 'admin';
+  const displayOrders = isAdmin ? jobs : userJobs;
 
   // Derive stats dynamically from Marketplace state
-  const activeDeliveriesCount = (userJobs.length > 0 ? userJobs : jobs).filter(
+  const targetJobs = isAdmin ? jobs : userJobs;
+
+  const activeDeliveriesCount = targetJobs.filter(
     (j: JobPost) => j.status === 'open' || j.status === 'assigned' || j.status === 'in_progress'
   ).length;
 
-  const totalBookingsCount = userJobs.length > 0 ? userJobs.length : jobs.length;
+  const totalBookingsCount = targetJobs.length;
 
-  const completedOrdersCount = (userJobs.length > 0 ? userJobs : jobs).filter(
+  const completedOrdersCount = targetJobs.filter(
     (j: JobPost) => j.status === 'completed'
   ).length;
 
