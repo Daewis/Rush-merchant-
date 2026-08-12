@@ -19,6 +19,11 @@ import {
   ShieldAlert,
   ChevronDown,
   Bell,
+  Clock,
+  Lock,
+  Wrench,
+  UserCheck,
+  DollarSign,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useMarketplace } from "../context/MarketplaceContext";
@@ -39,8 +44,19 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
 }) => {
   const { user, logout } = useAuth();
-  const { selectedHub, setSelectedHub, searchQuery, setSearchQuery, unreadNotificationsCount, campusHubs } = useMarketplace();
+  const { selectedHub, setSelectedHub, searchQuery, setSearchQuery, unreadNotificationsCount, campusHubs, jobs, disputes } = useMarketplace();
   const { setView } = useAppStore();
+
+  const isArtisan = user?.role === "artisan" || user?.role === "provider";
+  const isAdmin = user?.role === "admin";
+
+  const activeJobsCount = jobs?.filter(
+    (j) => j.status === "assigned" || j.status === "in_progress"
+  ).length || 0;
+
+  const openDisputesCount = disputes?.filter(
+    (d) => d.status === "open" || d.status === "under_review"
+  ).length || 0;
 
   const allHubOptions = ["All Campus Hubs", ...campusHubs];
 
@@ -309,7 +325,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Mobile Header Controls */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex lg:hidden items-center gap-2">
           {/* Mobile Notification Bell - Only shown when logged in */}
           {isLoggedIn && (
             <button
@@ -362,7 +378,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Mobile Drawer / Slide-Over Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-4 shadow-xl animate-in slide-in-from-top duration-200">
+        <div className="lg:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-4 shadow-xl animate-in slide-in-from-top duration-200">
           {/* Search & Hub Selector on Mobile */}
           <div className="space-y-2">
             <div className="relative">
@@ -392,71 +408,210 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <div className="space-y-1 border-t border-slate-100 pt-3">
-            {activeTab !== "home" && !isLoggedIn && (
+          {/* Navigation Links in Mobile Drawer */}
+          <div className="border-t border-slate-100 pt-3 space-y-1">
+            <p className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              {isAdmin ? "Admin Navigation" : isArtisan ? "Artisan Workspace" : "Navigation"}
+            </p>
+
+            {/* Back to Home / Home link for guests or non-home */}
+            {!user && (
               <button
                 onClick={() => handleNavigate("home")}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  activeTab === "home"
+                    ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
               >
-                <HomeIcon className="w-4 h-4 text-orange-600" />
-                <span>Home</span>
+                <div className="flex items-center gap-2.5">
+                  <HomeIcon className="w-4 h-4 text-orange-600" />
+                  <span>Home</span>
+                </div>
               </button>
             )}
 
-            {isLoggedIn ? (
-              <>
-                <button
-                  onClick={() => handleNavigate("dashboard")}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold ${
-                    activeTab === "dashboard" ? "bg-orange-100 text-orange-800" : "text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    <span>My Dashboard</span>
-                  </div>
-                  <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold uppercase">
-                    {user.role}
+            {/* Dashboard / Portal */}
+            <button
+              onClick={() => handleNavigate("dashboard")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "dashboard"
+                  ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                {isAdmin ? (
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                ) : isArtisan ? (
+                  <Wrench className="w-4 h-4 text-amber-600" />
+                ) : (
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                )}
+                <span>
+                  {isAdmin
+                    ? "Admin Console"
+                    : isArtisan
+                    ? "Artisan Dashboard"
+                    : "My Dashboard"}
+                </span>
+              </div>
+              {user ? (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                  isAdmin ? "bg-purple-100 text-purple-800" : isArtisan ? "bg-amber-100 text-amber-800" : "bg-orange-100 text-orange-800"
+                }`}>
+                  {user.role}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                  <Lock className="w-3 h-3 text-slate-400" /> Sign In
+                </span>
+              )}
+            </button>
+
+            {/* Jobs & Bidding Board */}
+            <button
+              onClick={() => handleNavigate("jobs")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "jobs"
+                  ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Briefcase className="w-4 h-4 text-orange-500" />
+                <span>
+                  {isArtisan ? "Find Jobs & Bid" : isAdmin ? "All Campus Jobs" : "Jobs & Bidding Board"}
+                </span>
+              </div>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold">
+                {jobs?.length || 0}
+              </span>
+            </button>
+
+            {/* Live Job Tracker HUD */}
+            <button
+              onClick={() => handleNavigate("track_hud")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "track_hud"
+                  ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Clock className="w-4 h-4 text-blue-600" />
+                <span>
+                  {isArtisan ? "My Active Gigs" : isAdmin ? "Global Job Monitor" : "Live Job Tracker HUD"}
+                </span>
+              </div>
+              {user ? (
+                activeJobsCount > 0 && (
+                  <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-extrabold animate-pulse">
+                    {activeJobsCount} Active
                   </span>
-                </button>
+                )
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                  <Lock className="w-3 h-3 text-slate-400" /> Sign In
+                </span>
+              )}
+            </button>
 
-                <button
-                  onClick={() => handleNavigate("jobs")}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${
-                    activeTab === "jobs" ? "bg-orange-100 text-orange-800" : "text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <Briefcase className="w-4 h-4 text-orange-500" />
-                  <span>Jobs & Bidding Board</span>
-                </button>
+            {/* Artisans Directory */}
+            <button
+              onClick={() => handleNavigate("artisans")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "artisans"
+                  ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                {isAdmin ? (
+                  <UserCheck className="w-4 h-4 text-indigo-600" />
+                ) : (
+                  <Users className="w-4 h-4 text-emerald-600" />
+                )}
+                <span>
+                  {isAdmin ? "User Management" : isArtisan ? "Artisans Directory" : "Vetted Artisans Directory"}
+                </span>
+              </div>
+            </button>
 
-                <button
-                  onClick={() => handleNavigate("artisans")}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${
-                    activeTab === "artisans" ? "bg-orange-100 text-orange-800" : "text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <Users className="w-4 h-4 text-blue-500" />
-                  <span>Artisans Directory</span>
-                </button>
+            {/* Service Categories (for non-artisan/non-admin) */}
+            {!isArtisan && !isAdmin && (
+              <button
+                onClick={() => handleNavigate("categories")}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  activeTab === "categories"
+                    ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Grid className="w-4 h-4 text-purple-600" />
+                  <span>Service Categories</span>
+                </div>
+              </button>
+            )}
 
-                <button
-                  onClick={() => handleNavigate("wallet")}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold ${
-                    activeTab === "wallet" ? "bg-orange-100 text-orange-800" : "text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Wallet className="w-4 h-4 text-emerald-600" />
-                    <span>Escrow Wallet</span>
-                  </div>
-                  <span className="font-extrabold text-emerald-700">
-                    ₦{user.walletBalance.toLocaleString()}
+            {/* Wallet */}
+            <button
+              onClick={() => handleNavigate("wallet")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "wallet"
+                  ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                {isArtisan ? (
+                  <DollarSign className="w-4 h-4 text-emerald-600" />
+                ) : (
+                  <Wallet className="w-4 h-4 text-emerald-600" />
+                )}
+                <span>
+                  {isArtisan ? "Earnings & Wallet" : isAdmin ? "System Escrow Ledger" : "Escrow Wallet"}
+                </span>
+              </div>
+              {user ? (
+                <span className="font-extrabold text-emerald-700 text-xs">
+                  ₦{user.walletBalance.toLocaleString()}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                  <Lock className="w-3 h-3 text-slate-400" /> Sign In
+                </span>
+              )}
+            </button>
+
+            {/* Disputes */}
+            <button
+              onClick={() => handleNavigate("disputes")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "disputes"
+                  ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <ShieldAlert className="w-4 h-4 text-red-500" />
+                <span>
+                  {isAdmin ? "Global Dispute Resolution" : "Accountability & Disputes"}
+                </span>
+              </div>
+              {user ? (
+                openDisputesCount > 0 && (
+                  <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">
+                    {openDisputesCount}
                   </span>
-                </button>
-              </>
-            ) : null}
+                )
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                  <Lock className="w-3 h-3 text-slate-400" /> Sign In
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Action CTAs & Auth */}

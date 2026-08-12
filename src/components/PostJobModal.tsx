@@ -15,7 +15,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose }) =
   const [title, setTitle] = useState<string>("");
   const [category, setCategory] = useState<string>("Plumbing & Leak Repairs");
   const [description, setDescription] = useState<string>("");
-  const [budget, setBudget] = useState<number>(10000);
+  const [budget, setBudget] = useState<number | string>("");
   const [location, setLocation] = useState<string>("Jaja Hall, Room 304");
   const [hub, setHub] = useState<string>(selectedHub === "All Campus Hubs" ? "Unilag Akoka Campus" : selectedHub);
   const [loading, setLoading] = useState<boolean>(false);
@@ -26,8 +26,14 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose }) =
     e.preventDefault();
     if (!user) return;
 
-    if (budget > user.walletBalance) {
-      alert(`Your wallet balance (₦${user.walletBalance.toLocaleString()}) is insufficient for ₦${budget.toLocaleString()} escrow lock. Please top-up in the Wallet tab.`);
+    const numericBudget = Number(budget);
+    if (!budget || isNaN(numericBudget) || numericBudget < 1000) {
+      alert("Please enter a valid escrow budget (Minimum ₦1,000)");
+      return;
+    }
+
+    if (numericBudget > user.walletBalance) {
+      alert(`Your wallet balance (₦${user.walletBalance.toLocaleString()}) is insufficient for ₦${numericBudget.toLocaleString()} escrow lock. Please top-up in the Wallet tab.`);
       return;
     }
 
@@ -38,7 +44,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose }) =
         title,
         category,
         description,
-        budget,
+        budget: numericBudget,
         location,
         hub,
         customerId: user.uid,
@@ -50,6 +56,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose }) =
       onClose();
       setTitle("");
       setDescription("");
+      setBudget("");
     } catch (err) {
       console.error(err);
     } finally {
@@ -135,8 +142,9 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose }) =
               type="number"
               required
               min={1000}
+              placeholder="Enter budget in ₦ (e.g. 5000)"
               value={budget}
-              onChange={(e) => setBudget(Number(e.target.value))}
+              onChange={(e) => setBudget(e.target.value === "" ? "" : Number(e.target.value))}
               className="w-full px-3 py-2 text-sm font-black bg-slate-50 border border-slate-200 rounded-lg outline-none focus:bg-white focus:border-orange-500"
             />
             <p className="text-[10px] text-slate-400 mt-1">
@@ -175,7 +183,9 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose }) =
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-[11px] text-emerald-800 flex items-center gap-2">
             <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              ₦{budget.toLocaleString()} will be automatically locked into Escrow from your Rush wallet upon posting.
+              {budget && Number(budget) > 0
+                ? `₦${Number(budget).toLocaleString()} will be automatically locked into Escrow from your Rush wallet upon posting.`
+                : "Enter an escrow budget amount above to lock funds upon posting."}
             </span>
           </div>
 
