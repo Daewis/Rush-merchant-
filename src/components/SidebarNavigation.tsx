@@ -68,17 +68,19 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
       {/* Mobile Horizontal Scrollable Tab Bar (< lg) */}
       <div className="lg:hidden bg-white rounded-xl border border-slate-200 p-2 shadow-xs mb-4">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 px-1">
-          <button
-            onClick={() => setActiveTab("home")}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition cursor-pointer ${
-              activeTab === "home"
-                ? "bg-orange-600 text-white shadow-xs font-bold"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
-          >
-            <Home className="w-3.5 h-3.5" />
-            <span>Home</span>
-          </button>
+          {!user && (
+            <button
+              onClick={() => setActiveTab("home")}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition cursor-pointer ${
+                activeTab === "home"
+                  ? "bg-orange-600 text-white shadow-xs font-bold"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Home</span>
+            </button>
+          )}
 
           <button
             onClick={() => handleProtectedTabClick("dashboard")}
@@ -247,19 +249,21 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           </p>
 
           <nav className="space-y-1 mt-1">
-            <button
-              onClick={() => setActiveTab("home")}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === "home"
-                  ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Home className="w-4 h-4 text-orange-600" />
-                <span>Home</span>
-              </div>
-            </button>
+            {!user && (
+              <button
+                onClick={() => setActiveTab("home")}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  activeTab === "home"
+                    ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Home className="w-4 h-4 text-orange-600" />
+                  <span>Home</span>
+                </div>
+              </button>
+            )}
 
             <button
               onClick={() => handleProtectedTabClick("dashboard")}
