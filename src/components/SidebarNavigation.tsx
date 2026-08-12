@@ -14,6 +14,10 @@ import {
   Lock,
   LogIn,
   UserPlus,
+  ShieldCheck,
+  Wrench,
+  DollarSign,
+  UserCheck,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useMarketplace } from "../context/MarketplaceContext";
@@ -31,6 +35,9 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
 }) => {
   const { user } = useAuth();
   const { jobs, disputes } = useMarketplace();
+
+  const isArtisan = user?.role === "artisan" || user?.role === "provider";
+  const isAdmin = user?.role === "admin";
 
   const activeJobsCount = jobs.filter(
     (j) => j.status === "assigned" || j.status === "in_progress"
@@ -82,7 +89,9 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Dashboard</span>
+            <span>
+              {isArtisan ? "Artisan Portal" : isAdmin ? "Admin Console" : "Dashboard"}
+            </span>
             {!user && <Lock className="w-3 h-3 text-slate-400 ml-0.5" />}
           </button>
 
@@ -95,7 +104,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             }`}
           >
             <Briefcase className="w-3.5 h-3.5" />
-            <span>Jobs ({jobs.length})</span>
+            <span>{isArtisan ? "Find Jobs" : "Jobs"} ({jobs.length})</span>
           </button>
 
           <button
@@ -107,7 +116,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             }`}
           >
             <Clock className="w-3.5 h-3.5 text-blue-500" />
-            <span>Tracker</span>
+            <span>{isArtisan ? "My Active Gigs" : "Tracker"}</span>
             {!user ? (
               <Lock className="w-3 h-3 text-slate-400 ml-0.5" />
             ) : (
@@ -128,19 +137,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Artisans</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("categories")}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition cursor-pointer ${
-              activeTab === "categories"
-                ? "bg-orange-600 text-white shadow-xs font-bold"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
-          >
-            <Grid className="w-3.5 h-3.5" />
-            <span>Categories</span>
+            <span>{isAdmin ? "User Management" : "Artisans"}</span>
           </button>
 
           <button
@@ -152,7 +149,7 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             }`}
           >
             <Wallet className="w-3.5 h-3.5" />
-            <span>Wallet</span>
+            <span>{isArtisan ? "Earnings & Wallet" : "Wallet"}</span>
             {!user && <Lock className="w-3 h-3 text-slate-400 ml-0.5" />}
           </button>
 
@@ -215,10 +212,38 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           </div>
         )}
 
+        {/* User Role Card if logged in */}
+        {user && (
+          <div className="bg-white rounded-xl border border-slate-200 p-3.5 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0 ${
+                isAdmin ? "bg-purple-600" : isArtisan ? "bg-amber-600" : "bg-orange-600"
+              }`}>
+                {user.displayName?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-900 truncate">{user.displayName}</p>
+                <p className="text-[10px] text-slate-500 truncate capitalize">
+                  {user.role} • {user.campusHub || "Unilag Hub"}
+                </p>
+              </div>
+            </div>
+            <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase shrink-0 border ${
+              isAdmin
+                ? "bg-purple-50 text-purple-700 border-purple-200"
+                : isArtisan
+                ? "bg-amber-50 text-amber-800 border-amber-200"
+                : "bg-orange-50 text-orange-800 border-orange-200"
+            }`}>
+              {user.role}
+            </span>
+          </div>
+        )}
+
         {/* Navigation Card */}
         <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-2xs">
           <p className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-            Main Navigation
+            {isAdmin ? "Admin Navigation" : isArtisan ? "Artisan Workspace" : "Customer Portal"}
           </p>
 
           <nav className="space-y-1 mt-1">
@@ -234,9 +259,6 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
                 <Home className="w-4 h-4 text-orange-600" />
                 <span>Home</span>
               </div>
-              <span className="text-[10px] bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-bold uppercase">
-                Home
-              </span>
             </button>
 
             <button
@@ -248,17 +270,25 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-amber-500" />
+                {isAdmin ? (
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                ) : isArtisan ? (
+                  <Wrench className="w-4 h-4 text-amber-600" />
+                ) : (
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                )}
                 <span>
-                  {user?.role === "artisan"
-                    ? "Artisan Dashboard"
-                    : user?.role === "admin"
+                  {isAdmin
                     ? "Admin Console"
+                    : isArtisan
+                    ? "Artisan Dashboard"
                     : "Customer Dashboard"}
                 </span>
               </div>
               {user ? (
-                <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold uppercase">
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                  isAdmin ? "bg-purple-100 text-purple-800" : isArtisan ? "bg-amber-100 text-amber-800" : "bg-orange-100 text-orange-800"
+                }`}>
                   {user.role}
                 </span>
               ) : (
@@ -278,7 +308,9 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             >
               <div className="flex items-center gap-2.5">
                 <Briefcase className="w-4 h-4 text-orange-500" />
-                <span>Jobs & Bidding Board</span>
+                <span>
+                  {isArtisan ? "Find Jobs & Bid" : isAdmin ? "All Campus Jobs" : "Jobs & Bidding Board"}
+                </span>
               </div>
               <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold">
                 {jobs.length}
@@ -295,7 +327,9 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             >
               <div className="flex items-center gap-2.5">
                 <Clock className="w-4 h-4 text-blue-600" />
-                <span>Live Job Tracker HUD</span>
+                <span>
+                  {isArtisan ? "My Active Gigs" : isAdmin ? "Global Job Monitor" : "Live Job Tracker HUD"}
+                </span>
               </div>
               {user ? (
                 activeJobsCount > 0 && (
@@ -319,24 +353,32 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <Users className="w-4 h-4 text-emerald-600" />
-                <span>Vetted Artisans Directory</span>
+                {isAdmin ? (
+                  <UserCheck className="w-4 h-4 text-indigo-600" />
+                ) : (
+                  <Users className="w-4 h-4 text-emerald-600" />
+                )}
+                <span>
+                  {isAdmin ? "User Management" : isArtisan ? "Artisans Directory" : "Vetted Artisans Directory"}
+                </span>
               </div>
             </button>
 
-            <button
-              onClick={() => setActiveTab("categories")}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === "categories"
-                  ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Grid className="w-4 h-4 text-purple-600" />
-                <span>Service Categories</span>
-              </div>
-            </button>
+            {!isArtisan && !isAdmin && (
+              <button
+                onClick={() => setActiveTab("categories")}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  activeTab === "categories"
+                    ? "bg-orange-50 text-orange-700 font-bold border border-orange-200/60"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Grid className="w-4 h-4 text-purple-600" />
+                  <span>Service Categories</span>
+                </div>
+              </button>
+            )}
 
             <button
               onClick={() => handleProtectedTabClick("wallet")}
@@ -347,8 +389,14 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <Wallet className="w-4 h-4 text-emerald-600" />
-                <span>Escrow Ledger Wallet</span>
+                {isArtisan ? (
+                  <DollarSign className="w-4 h-4 text-emerald-600" />
+                ) : (
+                  <Wallet className="w-4 h-4 text-emerald-600" />
+                )}
+                <span>
+                  {isArtisan ? "Earnings & Wallet" : isAdmin ? "System Escrow Ledger" : "Escrow Ledger Wallet"}
+                </span>
               </div>
               {!user && (
                 <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
@@ -367,7 +415,9 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
             >
               <div className="flex items-center gap-2.5">
                 <ShieldAlert className="w-4 h-4 text-red-500" />
-                <span>Accountability & Disputes</span>
+                <span>
+                  {isAdmin ? "Global Dispute Resolution" : "Accountability & Disputes"}
+                </span>
               </div>
               {user ? (
                 openDisputesCount > 0 && (
@@ -384,39 +434,41 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
           </nav>
         </div>
 
-        {/* Escrow Guarantee Highlight Widget */}
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl p-4 space-y-3 shadow-md border border-slate-700 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 rounded-full blur-xl pointer-events-none" />
+        {/* Escrow Guarantee Highlight Widget - Only shown when logged in */}
+        {user && (
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl p-4 space-y-3 shadow-md border border-slate-700 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 rounded-full blur-xl pointer-events-none" />
 
-          <div className="flex items-center gap-2 text-orange-400">
-            <Sparkles className="w-4 h-4" />
-            <span className="text-xs font-black uppercase tracking-wider">
-              Rush Guarantee
-            </span>
-          </div>
-
-          <p className="text-xs text-slate-300 leading-relaxed font-normal">
-            100% Escrow Protection. Money is held securely until you confirm the 4-digit OTP at job location.
-          </p>
-
-          <div className="space-y-1.5 pt-1 text-[11px] text-slate-400 border-t border-slate-700/60">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span>NIN / BVN Biometric Vetted</span>
+            <div className="flex items-center gap-2 text-orange-400">
+              <Sparkles className="w-4 h-4" />
+              <span className="text-xs font-black uppercase tracking-wider">
+                Rush Guarantee
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-              <span>Real-time GPS Check-in OTP</span>
-            </div>
-          </div>
 
-          <button
-            onClick={handlePostJobClick}
-            className="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-lg shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-          >
-            {user ? "Post a Request Now" : "Sign In to Post Request"}
-          </button>
-        </div>
+            <p className="text-xs text-slate-300 leading-relaxed font-normal">
+              100% Escrow Protection. Money is held securely until you confirm the 4-digit OTP at job location.
+            </p>
+
+            <div className="space-y-1.5 pt-1 text-[11px] text-slate-400 border-t border-slate-700/60">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>NIN / BVN Biometric Vetted</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <span>Real-time GPS Check-in OTP</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handlePostJobClick}
+              className="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-lg shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              Post a Request Now
+            </button>
+          </div>
+        )}
 
         {/* Support Contact Box */}
         <div className="bg-slate-100 rounded-xl p-3.5 text-xs text-slate-600 border border-slate-200 flex items-start gap-2.5">
@@ -434,3 +486,4 @@ export const SidebarNavigation: React.FC<SidebarProps> = ({
     </aside>
   );
 };
+

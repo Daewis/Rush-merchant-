@@ -26,6 +26,10 @@ interface MarketplaceContextType {
   disputes: DisputeCase[];
   notifications: Notification[];
   unreadNotificationsCount: number;
+  campusHubs: string[];
+  addCampusHub: (hubName: string) => void;
+  editCampusHub: (oldName: string, newName: string) => void;
+  deleteCampusHub: (hubName: string) => void;
   selectedHub: string;
   setSelectedHub: (hub: string) => void;
   searchQuery: string;
@@ -62,9 +66,61 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [disputes, setDisputes] = useState<DisputeCase[]>(initialDisputes);
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications as Notification[]);
 
+  const [campusHubs, setCampusHubs] = useState<string[]>([
+    "Unilag Akoka Campus",
+    "Lasu Ojo Campus",
+    "UI Agbowo Area",
+    "OAU Ile-Ife Campus",
+    "UNN Nsukka Campus",
+    "ABU Zaria Campus",
+    "Covenant Ota Hub",
+  ]);
+
   const [selectedHub, setSelectedHub] = useState<string>("All Campus Hubs");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
+  const addCampusHub = (hubName: string) => {
+    const trimmed = hubName.trim();
+    if (!trimmed) {
+      toast.error("Campus hub name cannot be empty");
+      return;
+    }
+    if (campusHubs.some((h) => h.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error("Campus hub already exists");
+      return;
+    }
+    setCampusHubs((prev) => [...prev, trimmed]);
+    toast.success(`Campus hub "${trimmed}" added successfully`);
+  };
+
+  const editCampusHub = (oldName: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) {
+      toast.error("Campus hub name cannot be empty");
+      return;
+    }
+    if (
+      oldName.toLowerCase() !== trimmed.toLowerCase() &&
+      campusHubs.some((h) => h.toLowerCase() === trimmed.toLowerCase())
+    ) {
+      toast.error("Campus hub name already exists");
+      return;
+    }
+    setCampusHubs((prev) => prev.map((h) => (h === oldName ? trimmed : h)));
+    if (selectedHub === oldName) {
+      setSelectedHub(trimmed);
+    }
+    toast.success(`Updated campus hub to "${trimmed}"`);
+  };
+
+  const deleteCampusHub = (hubName: string) => {
+    setCampusHubs((prev) => prev.filter((h) => h !== hubName));
+    if (selectedHub === hubName) {
+      setSelectedHub("All Campus Hubs");
+    }
+    toast.success(`Removed campus hub "${hubName}"`);
+  };
 
   const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
 
@@ -479,6 +535,10 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         disputes,
         notifications,
         unreadNotificationsCount,
+        campusHubs,
+        addCampusHub,
+        editCampusHub,
+        deleteCampusHub,
         selectedHub,
         setSelectedHub,
         searchQuery,

@@ -1,4 +1,4 @@
-export type UserRole = "customer" | "artisan" | "admin";
+export type UserRole = "customer" | "artisan" | "provider" | "admin";
 
 export type VerificationStatus = "unverified" | "pending" | "verified" | "rejected";
 

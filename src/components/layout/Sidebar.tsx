@@ -36,7 +36,7 @@ export function Sidebar({ className, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const { currentView, setView } = useAppStore();
 
-  const isProvider = user?.role === 'provider';
+  const isProvider = user?.role === 'provider' || user?.role === 'artisan';
   const isAdmin = user?.role === 'admin';
 
   const navItems: { title: string; view: AppView; icon: any }[] = [

@@ -11,7 +11,7 @@ export const ArtisanOnboardingModal: React.FC<ArtisanOnboardingModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { registerArtisan } = useMarketplace();
+  const { registerArtisan, campusHubs } = useMarketplace();
 
   const [displayName, setDisplayName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -167,13 +167,13 @@ export const ArtisanOnboardingModal: React.FC<ArtisanOnboardingModalProps> = ({
             <select
               value={hub}
               onChange={(e) => setHub(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none"
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none cursor-pointer"
             >
-              <option value="Unilag Akoka Campus">Unilag Akoka Campus</option>
-              <option value="UI Agbowo Area">UI Agbowo Area</option>
-              <option value="OAU Ile-Ife Campus">OAU Ile-Ife Campus</option>
-              <option value="UNN Nsukka Campus">UNN Nsukka Campus</option>
-              <option value="Covenant Ota Hub">Covenant Ota Hub</option>
+              {campusHubs.map((h) => (
+                <option key={h} value={h}>
+                  {h}
+                </option>
+              ))}
             </select>
           </div>
 

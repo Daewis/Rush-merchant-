@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { StatsCard } from './StatsCard';
 import { ChartWidget } from './ChartWidget';
-import { Users, Truck, DollarSign, ShieldAlert, Activity, Server, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Users, Truck, DollarSign, ShieldAlert, Activity, Server, Clock, AlertTriangle, CheckCircle, Building, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { adminApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { useMarketplace } from '@/context/MarketplaceContext';
 
 interface SystemMetric {
   totalUsers: number;
@@ -18,7 +19,11 @@ interface SystemMetric {
 }
 
 export function AdminDashboard() {
+  const { campusHubs, addCampusHub, editCampusHub, deleteCampusHub } = useMarketplace();
   const [loading, setLoading] = useState(true);
+  const [newHubName, setNewHubName] = useState('');
+  const [editingHub, setEditingHub] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState('');
   const [metrics, setMetrics] = useState<SystemMetric>({
     totalUsers: 1420,
     activeProviders: 184,
@@ -278,6 +283,141 @@ export function AdminDashboard() {
             data={volumeByRegion}
           />
         </div>
+      </motion.div>
+
+      {/* Campus Hubs Governance Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <Card className="border-slate-200 shadow-md">
+          <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50 rounded-t-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-900">
+                <Building className="h-5 w-5 text-orange-600" />
+                Campus Hubs Management & Directory
+              </CardTitle>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Add, rename, or deactivate active institutional campus coverage areas across Nigeria.
+              </p>
+            </div>
+            <Badge className="bg-orange-100 text-orange-800 border-orange-200 font-bold self-start sm:self-auto">
+              {campusHubs.length} Active Hubs
+            </Badge>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-4">
+            {/* Add New Hub Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (newHubName.trim()) {
+                  addCampusHub(newHubName);
+                  setNewHubName('');
+                }
+              }}
+              className="flex items-center gap-2"
+            >
+              <div className="relative flex-1">
+                <Building className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={newHubName}
+                  onChange={(e) => setNewHubName(e.target.value)}
+                  placeholder="Enter new campus hub name (e.g. Lasu Ojo Campus)..."
+                  className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 bg-white"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-lg shadow-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Campus Hub</span>
+              </button>
+            </form>
+
+            {/* List of Active Campus Hubs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+              {campusHubs.map((hub) => (
+                <div
+                  key={hub}
+                  className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-2 hover:bg-white hover:shadow-xs transition"
+                >
+                  {editingHub === hub ? (
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <input
+                        type="text"
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border border-orange-400 rounded-md outline-none bg-white font-semibold text-slate-800"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          if (editingValue.trim()) {
+                            editCampusHub(hub, editingValue);
+                            setEditingHub(null);
+                          }
+                        }}
+                        className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-md transition"
+                        title="Save changes"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setEditingHub(null)}
+                        className="p-1 text-slate-400 hover:bg-slate-200 rounded-md transition"
+                        title="Cancel"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center font-black text-xs shrink-0">
+                          {hub.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-slate-800 truncate">{hub}</p>
+                          <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Dispatch Active
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => {
+                            setEditingHub(hub);
+                            setEditingValue(hub);
+                          }}
+                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          title="Rename Hub"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to remove ${hub}?`)) {
+                              deleteCampusHub(hub);
+                            }
+                          }}
+                          className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                          title="Delete Hub"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
     </div>
   );

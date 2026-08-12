@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { User, UserRole } from '../models/User.js';
 import { Provider } from '../models/Provider.js';
@@ -6,6 +7,10 @@ import { Payment, PaymentStatus, PaymentProviderEnum } from '../models/Payment.j
 import { Violation, ViolationType, ViolationSeverity, ViolationStatus } from '../models/Violation.js';
 
 export async function seedInitialData() {
+  if (mongoose.connection.readyState !== 1) {
+    return;
+  }
+
   const userCount = await User.countDocuments();
   if (userCount > 0) {
     return;

@@ -5,7 +5,6 @@ import { useAppStore } from "../store/app-store";
 interface AuthContextType {
   user: UserProfile | null;
   role: UserRole;
-  loginAs: (role: UserRole) => void;
   logout: () => void;
   updateWallet: (amountDelta: number, escrowDelta?: number) => void;
   updateProfile: (updated: Partial<UserProfile>) => void;
@@ -54,22 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [storeUser]);
 
-  const loginAs = (role: UserRole) => {
-    if (user) {
-      const updatedUser: UserProfile = {
-        ...user,
-        role,
-      };
-      setUser(updatedUser);
-      setStoreUser({
-        ...storeUser,
-        role: role === "artisan" ? "provider" : role,
-      } as any);
-    } else {
-      useAppStore.getState().setView("login");
-    }
-  };
-
   const logout = () => {
     setUser(null);
     setStoreUser(null as any);
@@ -95,7 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         role: user?.role || "customer",
-        loginAs,
         logout,
         updateWallet,
         updateProfile,

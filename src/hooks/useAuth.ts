@@ -11,8 +11,8 @@ import {
   signOut,
   onAuthStateChanged,
   doc,
-  getDoc,
-  setDoc,
+  getDocSafe,
+  setDocSafe,
   serverTimestamp
 } from '@/lib/firebase';
 import { authApi } from '@/lib/api';
@@ -45,10 +45,10 @@ export function useAuth() {
       if (firebaseUser) {
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
+          const userDocSnap = await getDocSafe(userDocRef);
 
           let userData: any = null;
-          if (userDocSnap.exists()) {
+          if (userDocSnap && userDocSnap.exists()) {
             userData = userDocSnap.data();
           } else {
             // Create user doc if signed in via Google first time
@@ -64,7 +64,7 @@ export function useAuth() {
               campusHub: 'Unilag Akoka Campus',
               createdAt: new Date().toISOString(),
             };
-            await setDoc(userDocRef, { ...userData, createdAt: serverTimestamp() }, { merge: true });
+            await setDocSafe(userDocRef, { ...userData, createdAt: serverTimestamp() }, { merge: true });
           }
 
           setUser(userData);
@@ -101,10 +101,10 @@ export function useAuth() {
 
         if (firebaseUser) {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
+          const userDocSnap = await getDocSafe(userDocRef);
           
           let userData: any = null;
-          if (userDocSnap.exists()) {
+          if (userDocSnap && userDocSnap.exists()) {
             userData = userDocSnap.data();
           } else {
             userData = {
@@ -116,7 +116,7 @@ export function useAuth() {
               escrowHeld: 15000,
               campusHub: 'Unilag Akoka Campus',
             };
-            await setDoc(userDocRef, userData);
+            await setDocSafe(userDocRef, userData);
           }
 
           setUser(userData);
@@ -173,10 +173,10 @@ export function useAuth() {
       const firebaseUser = userCred.user;
 
       const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
+      const userDocSnap = await getDocSafe(userDocRef);
 
       let userData: any = null;
-      if (userDocSnap.exists()) {
+      if (userDocSnap && userDocSnap.exists()) {
         userData = userDocSnap.data();
       } else {
         userData = {
@@ -191,7 +191,7 @@ export function useAuth() {
           campusHub: 'Unilag Akoka Campus',
           createdAt: new Date().toISOString(),
         };
-        await setDoc(userDocRef, { ...userData, createdAt: serverTimestamp() }, { merge: true });
+        await setDocSafe(userDocRef, { ...userData, createdAt: serverTimestamp() }, { merge: true });
       }
 
       setUser(userData);
@@ -265,7 +265,7 @@ export function useAuth() {
 
         if (firebaseUser) {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
-          await setDoc(userDocRef, { ...userData, createdAt: serverTimestamp() });
+          await setDocSafe(userDocRef, { ...userData, createdAt: serverTimestamp() });
         }
 
         // Try API endpoint too

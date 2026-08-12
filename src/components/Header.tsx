@@ -32,25 +32,17 @@ interface HeaderProps {
   setActiveTab: (tab: string) => void;
 }
 
-const campusHubs = [
-  "All Campus Hubs",
-  "Unilag Akoka Campus",
-  "UI Agbowo Area",
-  "OAU Ile-Ife Campus",
-  "UNN Nsukka Campus",
-  "ABU Zaria Campus",
-  "Covenant Ota Hub",
-];
-
 export const Header: React.FC<HeaderProps> = ({
   onOpenPostJob,
   onOpenOnboarding,
   activeTab,
   setActiveTab,
 }) => {
-  const { user, loginAs, logout } = useAuth();
-  const { selectedHub, setSelectedHub, searchQuery, setSearchQuery, unreadNotificationsCount } = useMarketplace();
+  const { user, logout } = useAuth();
+  const { selectedHub, setSelectedHub, searchQuery, setSearchQuery, unreadNotificationsCount, campusHubs } = useMarketplace();
   const { setView } = useAppStore();
+
+  const allHubOptions = ["All Campus Hubs", ...campusHubs];
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -84,51 +76,6 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-xs">
-      {/* Top Banner Notice - Mobile Scrollable & Wrapped */}
-      <div className="bg-slate-900 text-slate-300 text-xs px-3 sm:px-4 py-1.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 overflow-x-auto">
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded text-[10px] tracking-wide border border-emerald-500/30 whitespace-nowrap">
-            NIN & BVN ENFORCED
-          </span>
-          <span className="hidden md:inline text-slate-400 text-[11px] whitespace-nowrap">
-            Campus Escrow Protection & GPS Handshake OTP Active
-          </span>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 ml-auto text-[11px]">
-          <span className="text-slate-400 text-[10px] hidden xs:inline">Role Switcher:</span>
-          <button
-            onClick={() => loginAs("customer")}
-            className={`px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition cursor-pointer ${
-              user?.role === "customer"
-                ? "bg-orange-500 text-white font-semibold"
-                : "text-slate-300 hover:text-white hover:bg-slate-800"
-            }`}
-          >
-            Student
-          </button>
-          <button
-            onClick={() => loginAs("artisan")}
-            className={`px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition cursor-pointer ${
-              user?.role === "artisan"
-                ? "bg-orange-500 text-white font-semibold"
-                : "text-slate-300 hover:text-white hover:bg-slate-800"
-            }`}
-          >
-            Artisan
-          </button>
-          <button
-            onClick={() => loginAs("admin")}
-            className={`px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition cursor-pointer ${
-              user?.role === "admin"
-                ? "bg-purple-600 text-white font-semibold"
-                : "text-slate-300 hover:text-white hover:bg-slate-800"
-            }`}
-          >
-            Admin
-          </button>
-        </div>
-      </div>
-
       {/* Main Header Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-2 sm:gap-4">
         {/* Logo */}
@@ -163,7 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => setSelectedHub(e.target.value)}
               className="pl-9 pr-8 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200/80 rounded-lg border border-slate-200 text-slate-700 focus:outline-none cursor-pointer appearance-none transition"
             >
-              {campusHubs.map((hub) => (
+              {allHubOptions.map((hub) => (
                 <option key={hub} value={hub}>
                   {hub}
                 </option>
@@ -363,19 +310,21 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Mobile Header Controls */}
         <div className="flex md:hidden items-center gap-2">
-          {/* Mobile Notification Bell */}
-          <button
-            onClick={() => setNotificationsOpen(true)}
-            className="relative p-2 rounded-lg text-slate-700 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
-            title="Notifications"
-          >
-            <Bell className="w-4 h-4 text-slate-700" />
-            {unreadNotificationsCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse border border-white">
-                {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
-              </span>
-            )}
-          </button>
+          {/* Mobile Notification Bell - Only shown when logged in */}
+          {isLoggedIn && (
+            <button
+              onClick={() => setNotificationsOpen(true)}
+              className="relative p-2 rounded-lg text-slate-700 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4 text-slate-700" />
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse border border-white">
+                  {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {isLoggedIn ? (
             <div 
@@ -423,7 +372,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onChange={(e) => setSelectedHub(e.target.value)}
                 className="w-full pl-9 pr-8 py-2 text-xs font-semibold bg-slate-100 rounded-lg border border-slate-200 text-slate-700"
               >
-                {campusHubs.map((hub) => (
+                {allHubOptions.map((hub) => (
                   <option key={hub} value={hub}>
                     {hub}
                   </option>
@@ -512,16 +461,18 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action CTAs & Auth */}
           <div className="border-t border-slate-100 pt-3 space-y-2">
-            <button
-              onClick={() => {
-                onOpenPostJob();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-orange-600 text-white rounded-lg font-bold text-xs shadow-md"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Post Job to Escrow</span>
-            </button>
+            {isLoggedIn && (
+              <button
+                onClick={() => {
+                  onOpenPostJob();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-orange-600 text-white rounded-lg font-bold text-xs shadow-md"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Post Job to Escrow</span>
+              </button>
+            )}
 
             {isLoggedIn ? (
               <div className="bg-slate-50 rounded-xl p-3 flex items-center justify-between border border-slate-200">

@@ -19,8 +19,14 @@ export async function connectDB() {
       console.log('✅ Connected to MongoDB successfully.');
       return;
     } catch (err) {
-      console.log('ℹ️ Remote MongoDB connection unavailable, switching to local database instance.');
+      console.log('ℹ️ Remote MongoDB connection unavailable.');
     }
+  }
+
+  // In production / Cloud Run environments without a MONGODB_URI, skip binary download to prevent memory/probe timeouts
+  if (process.env.NODE_ENV === 'production' || process.env.DISABLE_MONGO_MEMORY_SERVER) {
+    console.log('ℹ️ MONGODB_URI not provided. Skipping MongoMemoryServer download for production compatibility.');
+    return;
   }
 
   try {
